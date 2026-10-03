@@ -86,3 +86,29 @@ export const createListing = async (req, res) => {
     });
   }
 };
+
+export const getListings = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         l.id, l.title, l.description, l.price, l.category,
+         l.image_url, l.status, l.created_at, l.seller_id,
+         u.name AS seller_name
+       FROM listings l
+       JOIN users u ON l.seller_id = u.id
+       WHERE l.status = 'available'
+       ORDER BY l.created_at DESC`,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
