@@ -89,15 +89,29 @@ export const createListing = async (req, res) => {
 
 export const getListings = async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const { search, category } = req.query;
+    const conditions = ["l.status = 'available'"];
+    const values = [];
+
+    if (typeof search === "string" && search.trim()) {
+      conditions.push("l.title LIKE ?");
+      values.push(`%${search.trim()}%`);
+    }
+
+    if (typeof category === "string" && category.trim()) {
+      conditions.push("l.category = ?");
+      values.push(category.trim());
+    }
+     const [rows] = await pool.query(
       `SELECT
          l.id, l.title, l.description, l.price, l.category,
          l.image_url, l.status, l.created_at, l.seller_id,
          u.name AS seller_name
        FROM listings l
        JOIN users u ON l.seller_id = u.id
-       WHERE l.status = 'available'
+       WHERE ${conditions.join(" AND ")}
        ORDER BY l.created_at DESC`,
+      values,
     );
 
     res.status(200).json({
