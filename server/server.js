@@ -2,7 +2,8 @@ import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import pool from "./config/db.js";
-import authRoute from "./routes/authRoute.js";
+import authRoutes from "./routes/authRoutes.js";
+import listingRoutes from "./routes/listingRoutes.js";
 
 const app = express();
 
@@ -33,7 +34,8 @@ app.get("/api/db-test", async (req, res) => {
   }
 });
 
-app.use("/api/auth", authRoute);
+app.use("/api/auth", authRoutes);
+app.use("/api/listings", listingRoutes);
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
