@@ -90,6 +90,16 @@ export const createListing = async (req, res) => {
 export const getListings = async (req, res) => {
   try {
     const { search, category } = req.query;
+
+    const rawPage = Number(req.query.page);
+    const rawLimit = Number(req.query.limit);
+
+    const page = Number.isInteger(rawPage) ? Math.max(rawPage, 1) : 1;
+    const limit = Number.isInteger(rawLimit)
+      ? Math.min(Math.max(rawLimit, 1), 50)
+      : 12;
+    const offset = (page - 1) * limit;
+
     const conditions = ["l.status = 'available'"];
     const values = [];
 
@@ -102,21 +112,74 @@ export const getListings = async (req, res) => {
       conditions.push("l.category = ?");
       values.push(category.trim());
     }
-     const [rows] = await pool.query(
+
+    const where = conditions.join(" AND ");
+
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) AS total FROM listings l WHERE ${where}`,
+      values,
+    );
+    const total = Number(countRows[0].total);
+
+    const [rows] = await pool.query(
       `SELECT
          l.id, l.title, l.description, l.price, l.category,
          l.image_url, l.status, l.created_at, l.seller_id,
          u.name AS seller_name
        FROM listings l
        JOIN users u ON l.seller_id = u.id
-       WHERE ${conditions.join(" AND ")}
-       ORDER BY l.created_at DESC`,
-      values,
+       WHERE ${where}
+       ORDER BY l.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [...values, limit, offset],
     );
 
     res.status(200).json({
       success: true,
       data: rows,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+export const getListingById = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const validId = Number.isInteger(id) && id > 0;
+
+    if (!validId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing id",
+      });
+    }
+    const [rows] = await pool.query(
+      `SELECT
+         l.id, l.title, l.description, l.price, l.category,
+         l.image_url, l.status, l.created_at, l.seller_id,
+         u.name AS seller_name
+       FROM listings l
+       JOIN users u ON l.seller_id = u.id
+       WHERE l.id = ?`,
+      [id],
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: rows[0],
     });
   } catch (error) {
     console.error(error);
