@@ -319,3 +319,54 @@ export const updateListing = async (req, res) => {
     });
   }
 };
+
+export const deleteListing = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const validId = Number.isInteger(id) && id > 0;
+
+    if (!validId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing id",
+      });
+    }
+    const [rows] = await pool.query(
+      "SELECT id, seller_id FROM listings WHERE id = ?",
+      [id],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+    if (rows[0].seller_id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+    const [result] = await pool.query(
+      "DELETE FROM listings WHERE id = ? AND seller_id = ?",
+      [id, req.user.id],
+    );
+    res.status(200).json({
+      success: true,
+      message: "Listing deleted successfully",
+    });
+  } catch (error) {
+    if (error.code === "ER_ROW_IS_REFERENCED_2") {
+      return res.status(409).json({
+        success: false,
+        message: "This listing has conversations. Mark it as sold instead.",
+      });
+    }
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
