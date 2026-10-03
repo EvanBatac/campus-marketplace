@@ -1,3 +1,4 @@
+import { data } from "react-router-dom";
 import pool from "../config/db.js";
 export const createListing = async (req, res) => {
   try {
@@ -180,6 +181,135 @@ export const getListingById = async (req, res) => {
     res.status(200).json({
       success: true,
       data: rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const updateListing = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { title, description, price, category, image_url, status } =
+      req.body ?? {};
+    const validId = Number.isInteger(id) && id > 0;
+    const allowedStatus = ["available", "sold"];
+
+    if (!validId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid listing id",
+      });
+    }
+    const [rows] = await pool.query(
+      "SELECT id, seller_id FROM listings WHERE id = ?",
+      [id],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+
+    if (rows[0].seller_id !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+
+    if (typeof title !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Title is required and must be text",
+      });
+    }
+
+    const normalizedTitle = title.trim();
+    if (normalizedTitle.length < 3 || normalizedTitle.length > 120) {
+      return res.status(400).json({
+        success: false,
+        message: "Title must be between 3 and 120 characters",
+      });
+    }
+
+    if (
+      typeof price !== "number" ||
+      !Number.isFinite(price) ||
+      price < 0 ||
+      price > 99999999.99
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Price must be a number between 0 and 99,999,999.99",
+      });
+    }
+
+    for (const [name, value] of Object.entries({
+      description,
+      category,
+      image_url,
+    })) {
+      if (value !== undefined && typeof value !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: `${name} must be text`,
+        });
+      }
+    }
+
+    if (category && category.length > 50) {
+      return res.status(400).json({
+        success: false,
+        message: "Category must be 50 characters or fewer",
+      });
+    }
+    if (image_url && image_url.length > 255) {
+      return res.status(400).json({
+        success: false,
+        message: "Image URL must be 255 characters or fewer",
+      });
+    }
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
+    }
+    const [result] = await pool.query(
+      "UPDATE listings SET title = ?, description = ?, price = ?, category = ?, image_url = ?, status = ? WHERE id = ? AND seller_id = ?",
+      [
+        normalizedTitle,
+        description ?? null,
+        price,
+        category ?? null,
+        image_url ?? null,
+        status,
+        id,
+        req.user.id,
+      ],
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Listing not found",
+      });
+    }
+    const [updatedRows] = await pool.query(
+      "SELECT * FROM listings WHERE id = ?",
+      [id],
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Listing updated successfully",
+      data: updatedRows[0],
     });
   } catch (error) {
     console.error(error);
