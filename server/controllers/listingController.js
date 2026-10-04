@@ -1,4 +1,3 @@
-import { data } from "react-router-dom";
 import pool from "../config/db.js";
 export const createListing = async (req, res) => {
   try {

@@ -4,6 +4,7 @@ import cors from "cors";
 import pool from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
+import conversationRoutes from "./routes/conversationRoutes.js";
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.get("/api/db-test", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
+app.use("/api/conversations", conversationRoutes);
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
