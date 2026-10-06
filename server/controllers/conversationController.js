@@ -79,3 +79,51 @@ export const startConversation = async (req, res) => {
     });
   }
 };
+
+export const getMessages = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const isValidId = Number.isInteger(id) && id > 0;
+
+    if (!isValidId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid id",
+      });
+    }
+    const [conversationRows] = await pool.query(
+      "SELECT id, buyer_id, seller_id FROM conversations WHERE id = ?",
+      [id],
+    );
+    if (conversationRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found",
+      });
+    }
+    const conversation = conversationRows[0];
+    if (
+      conversation.seller_id !== req.user.id &&
+      conversation.buyer_id !== req.user.id
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+    const [messageRows] = await pool.query(
+      "SELECT id, conversation_id, sender_id, body, read_at, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at ASC, id ASC",
+      [id],
+    );
+    res.status(200).json({
+      success: true,
+      data: messageRows,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
