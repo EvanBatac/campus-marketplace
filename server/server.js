@@ -43,6 +43,9 @@ io.on("connection", (socket) => {
   socket.join(room);
   console.log("Client connected:", socket.user.id, socket.id, "joined", room);
 
+  socket.on("send_message", (data) => {
+    console.log("send_message from user", socket.user.id, data);
+  });
   socket.on("disconnect", (reason) => {
     console.log("Client disconnected: ", socket.user.id, reason);
   });
