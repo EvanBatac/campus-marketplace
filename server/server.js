@@ -1,4 +1,7 @@
 import express from "express";
+import http from "http";
+import jwt from "jsonwebtoken";
+import { Server } from "socket.io";
 import "dotenv/config";
 import cors from "cors";
 import pool from "./config/db.js";
@@ -11,6 +14,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+  },
+});
+
+io.use((socket, next) => {
+  const token = socket.handshake.query?.token;
+
+  if (typeof token !== "string") {
+    return next(new Error("unauthorized"));
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = { id: decoded.id };
+    next();
+  } catch (error) {
+    next(new Error("unauthorized"));
+  }
+});
+io.on("connection", (socket) => {
+  console.log("Client connected: ", socket.user.id, socket.id);
+
+  socket.on("disconnect", (reason) => {
+    console.log("Client disconnected: ", socket.user.id, reason);
+  });
+});
 const port = Number(process.env.PORT);
 
 app.get("/api/health", (req, res) => {
@@ -39,6 +71,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
 app.use("/api/conversations", conversationRoutes);
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
