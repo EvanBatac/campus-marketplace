@@ -61,7 +61,7 @@ io.on("connection", (socket) => {
     }
     try {
       const [rows] = await pool.query(
-        "SELECT id FROM conversations WHERE id = ? AND (buyer_id = ? OR seller_id = ?)",
+        "SELECT id, buyer_id, seller_id FROM conversations WHERE id = ? AND (buyer_id = ? OR seller_id = ?)",
         [conversationId, socket.user.id, socket.user.id],
       );
 
@@ -69,13 +69,26 @@ io.on("connection", (socket) => {
         console.log("Not allowed");
         return;
       }
+      const conversation = rows[0];
+      const recipientId =
+        conversation.buyer_id === socket.user.id
+          ? conversation.seller_id
+          : conversation.buyer_id;
+
       const [result] = await pool.query(
         "INSERT INTO messages (conversation_id, sender_id, body) VALUES ( ?, ?, ? )",
         [conversationId, socket.user.id, content.trim()],
       );
 
-      console.log(result.insertId);
-      console.log("send_message from user", socket.user.id, data);
+      console.log(
+        "Saved message",
+        result.insertId,
+        "from",
+        socket.user.id,
+        "to",
+        recipientId,
+      );
+  
     } catch (err) {
       console.error("send_message error:", err.message);
     }
