@@ -38,13 +38,47 @@ io.use((socket, next) => {
 });
 io.on("connection", (socket) => {
   const room = `user:${socket.user.id}`;
-  console.log("Client connected: ", socket.user.id, socket.id);
 
   socket.join(room);
   console.log("Client connected:", socket.user.id, socket.id, "joined", room);
 
-  socket.on("send_message", (data) => {
-    console.log("send_message from user", socket.user.id, data);
+  socket.on("send_message", async (data) => {
+    if (typeof data !== "object" || data === null) {
+      console.log("Invalid message");
+      return;
+    }
+
+    const { conversationId, content } = data;
+
+    if (!Number.isInteger(conversationId)) {
+      console.log("Invalid message");
+      return;
+    }
+
+    if (typeof content !== "string" || content.trim() === "") {
+      console.log("Invalid message");
+      return;
+    }
+    try {
+      const [rows] = await pool.query(
+        "SELECT id FROM conversations WHERE id = ? AND (buyer_id = ? OR seller_id = ?)",
+        [conversationId, socket.user.id, socket.user.id],
+      );
+
+      if (rows.length === 0) {
+        console.log("Not allowed");
+        return;
+      }
+      const [result] = await pool.query(
+        "INSERT INTO messages (conversation_id, sender_id, body) VALUES ( ?, ?, ? )",
+        [conversationId, socket.user.id, content.trim()],
+      );
+
+      console.log(result.insertId);
+      console.log("send_message from user", socket.user.id, data);
+    } catch (err) {
+      console.error("send_message error:", err.message);
+    }
   });
   socket.on("disconnect", (reason) => {
     console.log("Client disconnected: ", socket.user.id, reason);
