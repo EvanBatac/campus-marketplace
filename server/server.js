@@ -37,7 +37,11 @@ io.use((socket, next) => {
   }
 });
 io.on("connection", (socket) => {
+  const room = `user:${socket.user.id}`;
   console.log("Client connected: ", socket.user.id, socket.id);
+
+  socket.join(room);
+  console.log("Client connected:", socket.user.id, socket.id, "joined", room);
 
   socket.on("disconnect", (reason) => {
     console.log("Client disconnected: ", socket.user.id, reason);
