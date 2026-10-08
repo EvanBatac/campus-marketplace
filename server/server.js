@@ -80,6 +80,17 @@ io.on("connection", (socket) => {
         [conversationId, socket.user.id, content.trim()],
       );
 
+      const message = {
+        id: result.insertId,
+        conversation_id: conversationId,
+        sender_id: socket.user.id,
+        body: content.trim(),
+        created_at: new Date(),
+      };
+      io.to(`user:${recipientId}`)
+        .to(`user:${socket.user.id}`)
+        .emit("new_message", message);
+        
       console.log(
         "Saved message",
         result.insertId,
@@ -88,7 +99,6 @@ io.on("connection", (socket) => {
         "to",
         recipientId,
       );
-  
     } catch (err) {
       console.error("send_message error:", err.message);
     }
