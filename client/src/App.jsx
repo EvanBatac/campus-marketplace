@@ -9,10 +9,12 @@ import MyListings from "./pages/MyListings";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import NewListing from "./pages/NewListing";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <>
+      <Navbar />
       <Routes>
         <Route path="/" element={<Navigate to="/listings" replace />} />
         <Route path="/listings" element={<Listings />} />
