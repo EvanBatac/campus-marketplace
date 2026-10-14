@@ -1,21 +1,36 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { api } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 const loginSchema = z.object({
   email: z.email("Enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 export default function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    setError,
+    formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(loginSchema) });
 
-  function onSubmit(data) {
-    console.log(data);
+  async function onSubmit(data) {
+    try {
+      const res = await api("/api/auth/login", {
+        method: "POST",
+        body: data,
+      });
+      console.log(res);
+      login(res.token);
+      navigate("/listings");
+    } catch (err) {
+      setError("root", { message: err.message });
+    }
   }
   return (
     <main className="flex min-h-[calc(100svh-73px)] items-center justify-center bg-slate-50 px-4 py-12 sm:px-6">
@@ -117,9 +132,15 @@ export default function Login() {
             )}
           </div>
 
+          {errors.root && (
+            <p role="alert" className="text-sm text-red-600">
+              {errors.root.message}
+            </p>
+          )}
           <button
             type="submit"
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800"
+            disabled={isSubmitting}
+            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:opacity-60"
           >
             Log in
           </button>
