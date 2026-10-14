@@ -15,6 +15,7 @@ export function AuthProvider({ children }) {
         setUser(null);
         return;
       }
+      setIsLoading(true);
       try {
         const data = await api("/api/auth/me");
         setUser(data.user);
@@ -29,8 +30,16 @@ export function AuthProvider({ children }) {
     loadUser();
   }, [token]);
 
+  function login(newToken) {
+    localStorage.setItem("token", newToken);
+    setToken(newToken);
+  }
+  function logout() {
+    localStorage.removeItem("token");
+    setToken(null);
+  }
   return (
-    <AuthContext.Provider value={{ user, isLoading }}>
+    <AuthContext.Provider value={{token, user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

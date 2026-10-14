@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const { user, isLoading } = useAuth();
-  console.log(`User: ${user}, Loading: ${isLoading}`)
+  console.log(`User: ${user}, Loading: ${isLoading}`);
   const navLinks = [
     { name: "Listings", path: "/listings" },
     { name: "Sell", path: "/listings/new" },
