@@ -4,17 +4,25 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 export default function Listings() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 400);
 
   function handleChange(e) {
     setSearch(e.target.value);
+    setPage(1);
+  }
+  function nextPage() {
+    setPage(page + 1);
+  }
+  function previousPage() {
+    setPage(page - 1);
   }
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["listings", debouncedSearch],
+    queryKey: ["listings", debouncedSearch, page],
     queryFn: async () => {
       const res = await api(
-        `/api/listings?search=${encodeURIComponent(debouncedSearch)}`,
+        `/api/listings?search=${encodeURIComponent(debouncedSearch)}&page=${page}`,
       );
       return res;
     },
@@ -54,6 +62,16 @@ export default function Listings() {
           ))}
         </ul>
       )}
+
+      <button disabled={page === 1} onClick={previousPage}>
+        Previous
+      </button>
+      <span>
+        Page {page} of {totalPages}
+      </span>
+      <button disabled={page >= totalPages} onClick={nextPage}>
+        Next
+      </button>
     </>
   );
 }
