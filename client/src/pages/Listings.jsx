@@ -1,32 +1,59 @@
+import { useState } from "react";
 import { api } from "../api/client";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Listings() {
+  const [search, setSearch] = useState("");
+
+  function handleChange(e) {
+    setSearch(e.target.value);
+  }
+
   const {
     data: listings,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ["listings"],
+    queryKey: ["listings", search],
     queryFn: async () => {
-      const res = await api("/api/listings");
+      const res = await api(
+        `/api/listings?search=${encodeURIComponent(search)}`,
+      );
       return res.data;
     },
   });
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>{error.message}</p>;
-  if (listings.length === 0) return <p>No listing</p>;
+
   return (
-    <ul>
-      {listings.map((listing) => (
-        <li key={listing.id}>
-          <h3>{listing.title}</h3>
-          <span>{listing.seller_name}</span>
-          <span>{listing.price}</span>
-          <span>{listing.status}</span>
-        </li>
-      ))}
-    </ul>
+    <>
+      <div>
+        <input
+          type="text"
+          value={search}
+          placeholder="Search listing"
+          className="w-64 border border-gray-300 rounded-md px-3 py-2"
+          onChange={handleChange}
+        />
+      </div>
+      {isLoading && <p>Loading...</p>}
+
+      {isError && <p>{error.message}</p>}
+
+      {!isLoading && !isError && listings.length === 0 && (
+        <p>No listings found</p>
+      )}
+      {!isLoading && !isError && (
+        <ul>
+          {listings.map((listing) => (
+            <li key={listing.id}>
+              <h3>{listing.title}</h3>
+              <span>{listing.seller_name}</span>
+              <span>{listing.price}</span>
+              <span>{listing.status}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
