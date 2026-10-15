@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import NewListing from "./pages/NewListing";
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -18,12 +19,14 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/listings" replace />} />
         <Route path="/listings" element={<Listings />} />
-        <Route path="/listings/new" element={<NewListing />} />
         <Route path="/listings/:id" element={<ListingDetail />} />
-        <Route path="/my-listings" element={<MyListings />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/messages/:conversationId" element={<Chat />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/listings/new" element={<NewListing />} />
+          <Route path="/my-listings" element={<MyListings />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/messages/:conversationId" element={<Chat />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="*" element={<NotFound />} />
