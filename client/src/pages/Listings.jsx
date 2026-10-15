@@ -10,21 +10,20 @@ export default function Listings() {
     setSearch(e.target.value);
   }
 
-  const {
-    data: listings,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["listings", debouncedSearch],
     queryFn: async () => {
       const res = await api(
         `/api/listings?search=${encodeURIComponent(debouncedSearch)}`,
       );
-      return res.data;
+      return res;
     },
   });
 
+  const listings = data?.data;
+  const totalPages = data?.totalPages;
+
+  console.log(`Page ${data?.page} of ${totalPages}`);
   return (
     <>
       <div>
