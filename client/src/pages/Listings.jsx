@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { api } from "../api/client";
 import { useQuery } from "@tanstack/react-query";
-
+import { useDebounce } from "../hooks/useDebounce";
 export default function Listings() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
 
   function handleChange(e) {
     setSearch(e.target.value);
@@ -15,10 +16,10 @@ export default function Listings() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["listings", search],
+    queryKey: ["listings", debouncedSearch],
     queryFn: async () => {
       const res = await api(
-        `/api/listings?search=${encodeURIComponent(search)}`,
+        `/api/listings?search=${encodeURIComponent(debouncedSearch)}`,
       );
       return res.data;
     },
