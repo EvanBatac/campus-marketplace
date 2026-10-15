@@ -1,5 +1,7 @@
+
 /* eslint-disable react-refresh/only-export-components */
-import { Link } from "react-router-dom";
+import { api } from "../api/client";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -26,14 +28,26 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 export default function Register() {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(registerSchema) });
 
   async function onSubmit(data) {
-    console.log(data);
+    // eslint-disable-next-line no-unused-vars
+    const { confirmPassword, ...payload } = data;
+    try {
+      await api("/api/auth/register", {
+        method: "POST",
+        body: payload,
+      });
+      navigate("/login");
+    } catch (err) {
+      setError("root", { message: err.message });
+    }
   }
   const fields = [
     {
@@ -150,6 +164,11 @@ export default function Register() {
               )}
             </div>
           ))}
+          {errors.root && (
+            <p role="alert" className="text-sm text-red-600">
+              {errors.root.message}
+            </p>
+          )}
           <button
             disabled={isSubmitting}
             type="submit"
