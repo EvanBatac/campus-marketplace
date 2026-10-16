@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
+import { Link } from "react-router-dom";
 export default function Listings() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -57,7 +58,9 @@ export default function Listings() {
         <ul>
           {listings.map((listing) => (
             <li key={listing.id}>
-              <h3>{listing.title}</h3>
+              <Link to={`/listings/${listing.id}`}>
+                <h3>{listing.title}</h3>
+              </Link>
               <span>{listing.seller_name}</span>
               <span>{listing.price}</span>
               <span>{listing.status}</span>
