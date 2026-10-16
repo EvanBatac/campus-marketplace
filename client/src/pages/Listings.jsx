@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api } from "../api/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 export default function Listings() {
   const [search, setSearch] = useState("");
@@ -18,7 +18,8 @@ export default function Listings() {
     setPage(page - 1);
   }
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    placeholderData: keepPreviousData,
     queryKey: ["listings", debouncedSearch, page],
     queryFn: async () => {
       const res = await api(
@@ -43,6 +44,7 @@ export default function Listings() {
           onChange={handleChange}
         />
       </div>
+      {isFetching && !isLoading && <p>Updating...</p>}
       {isLoading && <p>Loading...</p>}
 
       {isError && <p>{error.message}</p>}
@@ -50,6 +52,7 @@ export default function Listings() {
       {!isLoading && !isError && listings.length === 0 && (
         <p>No listings found</p>
       )}
+
       {!isLoading && !isError && (
         <ul>
           {listings.map((listing) => (
