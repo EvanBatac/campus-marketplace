@@ -30,7 +30,7 @@ export default function NewListing() {
     resolver: zodResolver(listingSchema),
   });
   const queryClient = useQueryClient();
-  const mutation = useMutation({
+  const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (data) => {
       const res = await api("/api/listings", {
         method: "POST",
@@ -44,7 +44,7 @@ export default function NewListing() {
     },
   });
   function onSubmit(data) {
-    mutation.mutate(data);
+    mutate(data);
   }
 
   return (
@@ -80,7 +80,10 @@ export default function NewListing() {
           <option value="other">Other</option>
         </select>
         {errors.category && <p>{errors.category.message}</p>}
-        <button type="submit">Submit</button>
+        <button type="submit" disabled={isPending}>
+          {isPending ? "Creating..." : "Create Listing"}
+        </button>
+        {isError && <p role="alert">{error.message}</p>}
       </form>
     </>
   );
