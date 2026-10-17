@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
+import { useNavigate } from "react-router-dom";
 const listingSchema = z.object({
   title: z
     .string()
@@ -20,6 +21,7 @@ const listingSchema = z.object({
   }),
 });
 export default function NewListing() {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -36,8 +38,9 @@ export default function NewListing() {
       });
       return res;
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["listings"] });
+      navigate(`/listings/${res.data.id}`);
     },
   });
   function onSubmit(data) {
