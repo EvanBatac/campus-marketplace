@@ -48,12 +48,11 @@ export default function Chat() {
       socket.off("new_message", onNewMessage);
       socket.disconnect();
     };
-  }, []);
+  }, [conversationId, queryClient]);
+
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>{error.message}</p>;
-  if (messages?.length === 0) {
-    return <p>No messages yet</p>;
-  }
+
   function handleSend(e) {
     e.preventDefault();
     if (!text.trim()) return;
@@ -65,6 +64,7 @@ export default function Chat() {
   }
   return (
     <>
+      {messages.length === 0 && <p>No messages yet</p>}
       <ul>
         {messages.map((message) => (
           <li key={message.id}>
