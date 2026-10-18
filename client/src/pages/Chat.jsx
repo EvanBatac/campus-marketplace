@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socket";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 export default function Chat() {
   const { conversationId } = useParams();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [text, setText] = useState("");
 
   const { data, isLoading, isError, error } = useQuery({
@@ -30,7 +31,10 @@ export default function Chat() {
     }
 
     function onNewMessage(message) {
-      console.log("new message", message);
+      queryClient.setQueryData(["messages", conversationId], (old) => ({
+        ...old,
+        data: [...old.data, message],
+      }));
     }
     socket.on("connect", onConnect);
     socket.on("connect_error", onConnectError);
