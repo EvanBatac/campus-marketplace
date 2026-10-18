@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { socket } from "../socket";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Chat() {
   const { conversationId } = useParams();
   const { user } = useAuth();
+  const [text, setText] = useState("");
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["messages", conversationId],
@@ -28,13 +29,18 @@ export default function Chat() {
       console.log("socket error:", err.message);
     }
 
+    function onNewMessage(message) {
+      console.log("new message", message);
+    }
     socket.on("connect", onConnect);
     socket.on("connect_error", onConnectError);
+    socket.on("new_message", onNewMessage);
     socket.connect();
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("connect_error", onConnectError);
+      socket.off("new_message", onNewMessage);
       socket.disconnect();
     };
   }, []);
@@ -42,6 +48,15 @@ export default function Chat() {
   if (isError) return <p>{error.message}</p>;
   if (messages?.length === 0) {
     return <p>No messages yet</p>;
+  }
+  function handleSend(e) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    socket.emit("send_message", {
+      conversationId: Number(conversationId),
+      content: text.trim(),
+    });
+    setText("");
   }
   return (
     <>
@@ -53,6 +68,15 @@ export default function Chat() {
           </li>
         ))}
       </ul>
+      <form onSubmit={handleSend}>
+        <input
+          type="text"
+          value={text}
+          placeholder="Type your message"
+          onChange={(e) => setText(e.target.value)}
+        />
+        <button type="submit">Send</button>
+      </form>
     </>
   );
 }
