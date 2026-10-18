@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Chat from "./pages/Chat";
 import Messages from "./pages/Messages";
+import MessagesLayout from "./pages/MessagesLayout";
 import ListingDetail from "./pages/ListingDetail";
 import MyListings from "./pages/MyListings";
 import NotFound from "./pages/NotFound";
@@ -23,8 +24,10 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/listings/new" element={<NewListing />} />
           <Route path="/my-listings" element={<MyListings />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:conversationId" element={<Chat />} />
+          <Route path="/messages" element={<MessagesLayout />}>
+            <Route index element={<Messages />} />
+            <Route path=":conversationId" element={<Chat />} />
+          </Route>
           <Route path="/settings" element={<Settings />} />
         </Route>
         <Route path="/login" element={<Login />} />

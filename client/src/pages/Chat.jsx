@@ -41,25 +41,25 @@ export default function Chat() {
   }, [messages]);
   if (isLoading)
     return (
-      <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
+      <div className="h-full min-h-0 p-4 sm:p-6">
         <p
           role="status"
           className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-xl shadow-slate-200/50"
         >
           Loading...
         </p>
-      </main>
+      </div>
     );
   if (isError)
     return (
-      <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
+      <div className="h-full min-h-0 p-4 sm:p-6">
         <p
           role="alert"
           className="mx-auto max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600"
         >
           {error.message}
         </p>
-      </main>
+      </div>
     );
 
   function handleSend(e) {
@@ -73,15 +73,15 @@ export default function Chat() {
   }
 
   return (
-    <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
-      <section aria-labelledby="chat-heading" className="mx-auto max-w-2xl">
+    <div className="h-full min-h-0">
+      <section aria-labelledby="chat-heading" className="flex h-full min-h-0 flex-col">
         <h1
           id="chat-heading"
-          className="mb-8 text-3xl font-bold tracking-tight text-slate-900"
+          className="shrink-0 border-b border-slate-100 px-4 py-5 text-xl font-bold tracking-tight text-slate-900 sm:px-6"
         >
           Chat
         </h1>
-        <div className="flex h-128 max-h-[70svh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
             {messages.length === 0 && (
               <p className="py-10 text-center text-sm text-slate-500">
@@ -127,6 +127,6 @@ export default function Chat() {
           </form>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
