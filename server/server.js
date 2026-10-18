@@ -23,7 +23,7 @@ const io = new Server(httpServer, {
 });
 
 io.use((socket, next) => {
-  const token = socket.handshake.query?.token;
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
   if (typeof token !== "string") {
     return next(new Error("unauthorized"));
@@ -90,7 +90,7 @@ io.on("connection", (socket) => {
       io.to(`user:${recipientId}`)
         .to(`user:${socket.user.id}`)
         .emit("new_message", message);
-        
+
       console.log(
         "Saved message",
         result.insertId,
