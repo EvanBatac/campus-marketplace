@@ -127,3 +127,27 @@ export const getMessages = async (req, res) => {
     });
   }
 };
+
+export const getMyConversations = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [rows] = await pool.query(
+      `SELECT c.id, c.listing_id, c.buyer_id, c.seller_id, c.created_at,
+              l.title AS listing_title,
+              u.id AS other_user_id,
+              u.name AS other_user_name
+       FROM conversations c
+       JOIN listings l ON l.id = c.listing_id
+       JOIN users u ON u.id = IF(c.buyer_id = ?, c.seller_id, c.buyer_id)
+       WHERE c.buyer_id = ? OR c.seller_id = ?
+       ORDER BY c.created_at DESC`,
+      [userId, userId, userId],
+    );
+
+    res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
