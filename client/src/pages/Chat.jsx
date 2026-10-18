@@ -21,16 +21,6 @@ export default function Chat() {
   });
   const messages = data?.data;
   useEffect(() => {
-    socket.auth = { token: localStorage.getItem("token") };
-
-    function onConnect() {
-      console.log("socket connected:", socket.id);
-    }
-
-    function onConnectError(err) {
-      console.log("socket error:", err.message);
-    }
-
     function onNewMessage(message) {
       if (message.conversation_id !== Number(conversationId)) return;
       queryClient.setQueryData(["messages", conversationId], (old) => ({
@@ -38,16 +28,11 @@ export default function Chat() {
         data: [...old.data, message],
       }));
     }
-    socket.on("connect", onConnect);
-    socket.on("connect_error", onConnectError);
+
     socket.on("new_message", onNewMessage);
-    socket.connect();
 
     return () => {
-      socket.off("connect", onConnect);
-      socket.off("connect_error", onConnectError);
       socket.off("new_message", onNewMessage);
-      socket.disconnect();
     };
   }, [conversationId, queryClient]);
 
