@@ -39,8 +39,28 @@ export default function Chat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-  if (isLoading) return <p>Loading...</p>;
-  if (isError) return <p>{error.message}</p>;
+  if (isLoading)
+    return (
+      <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
+        <p
+          role="status"
+          className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-xl shadow-slate-200/50"
+        >
+          Loading...
+        </p>
+      </main>
+    );
+  if (isError)
+    return (
+      <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
+        <p
+          role="alert"
+          className="mx-auto max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600"
+        >
+          {error.message}
+        </p>
+      </main>
+    );
 
   function handleSend(e) {
     e.preventDefault();
@@ -53,26 +73,60 @@ export default function Chat() {
   }
 
   return (
-    <>
-      {messages.length === 0 && <p>No messages yet</p>}
-      <ul>
-        {messages.map((message) => (
-          <li key={message.id}>
-            {message.sender_id === user.id ? "Me: " : "Them: "}
-            {message.body}
-          </li>
-        ))}
-      </ul>
-      <div ref={bottomRef}></div>
-      <form onSubmit={handleSend}>
-        <input
-          type="text"
-          value={text}
-          placeholder="Type your message"
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button type="submit">Send</button>
-      </form>
-    </>
+    <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
+      <section aria-labelledby="chat-heading" className="mx-auto max-w-2xl">
+        <h1
+          id="chat-heading"
+          className="mb-8 text-3xl font-bold tracking-tight text-slate-900"
+        >
+          Chat
+        </h1>
+        <div className="flex h-128 max-h-[70svh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
+            {messages.length === 0 && (
+              <p className="py-10 text-center text-sm text-slate-500">
+                No messages yet
+              </p>
+            )}
+            <ul className="space-y-4">
+              {messages.map((message) => (
+                <li
+                  key={message.id}
+                  className={`flex ${message.sender_id === user.id ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`w-fit max-w-[70%] rounded-2xl px-4 py-2 text-sm leading-6 ${message.sender_id === user.id ? "rounded-br-sm bg-blue-600 text-white" : "rounded-bl-sm bg-slate-100 text-slate-800"}`}
+                  >
+                    <p className="whitespace-pre-wrap wrap-anywhere">
+                      {message.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div ref={bottomRef}></div>
+          </div>
+          <form
+            onSubmit={handleSend}
+            className="flex shrink-0 items-center gap-3 border-t border-slate-100 bg-white p-4 sm:p-6"
+          >
+            <input
+              type="text"
+              value={text}
+              placeholder="Type your message"
+              aria-label="Message"
+              className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              onChange={(e) => setText(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+            >
+              Send
+            </button>
+          </form>
+        </div>
+      </section>
+    </main>
   );
 }

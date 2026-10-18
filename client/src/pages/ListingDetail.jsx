@@ -108,10 +108,18 @@ export default function ListingDetail() {
             </section>
           </article>
         )}
-        <button disabled={isStarting} onClick={() => mutate(listing.id)}>
+        <button
+          disabled={isStarting}
+          onClick={() => mutate(listing.id)}
+          className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
+        >
           Message Seller
         </button>
-        {isStartError && <p>{startError.message}</p>}
+        {isStartError && (
+          <p role="alert" className="mt-2 text-sm text-red-600">
+            {startError.message}
+          </p>
+        )}
       </div>
     </main>
   );
