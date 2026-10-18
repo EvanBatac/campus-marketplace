@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { socket } from "../socket";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ export default function Chat() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
+  const bottomRef = useRef(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["messages", conversationId],
@@ -50,6 +51,9 @@ export default function Chat() {
     };
   }, [conversationId, queryClient]);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>{error.message}</p>;
 
@@ -62,6 +66,7 @@ export default function Chat() {
     });
     setText("");
   }
+
   return (
     <>
       {messages.length === 0 && <p>No messages yet</p>}
@@ -73,6 +78,7 @@ export default function Chat() {
           </li>
         ))}
       </ul>
+      <div ref={bottomRef}></div>
       <form onSubmit={handleSend}>
         <input
           type="text"
