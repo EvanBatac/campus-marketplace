@@ -33,7 +33,6 @@ export default function Listings() {
   const listings = data?.data;
   const totalPages = data?.totalPages;
 
-  console.log(`Page ${data?.page} of ${totalPages}`);
   return (
     <main className="min-h-[calc(100svh-73px)] bg-slate-50 px-4 py-12 sm:px-6">
       <section aria-labelledby="listings-heading" className="mx-auto max-w-6xl">
