@@ -1,13 +1,32 @@
-import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../api/client";
 export default function ListingDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["listing", id],
     queryFn: async () => {
       const res = await api(`/api/listings/${id}`);
       return res;
+    },
+  });
+
+  const {
+    mutate,
+    isPending: isStarting,
+    isError: isStartError,
+    error: startError,
+  } = useMutation({
+    mutationFn: async (listingId) => {
+      const res = await api(`/api/conversations`, {
+        method: "POST",
+        body: { listing_id: listingId },
+      });
+      return res;
+    },
+    onSuccess: (res) => {
+      navigate(`/messages/${res.data.id}`);
     },
   });
 
@@ -89,6 +108,10 @@ export default function ListingDetail() {
             </section>
           </article>
         )}
+        <button disabled={isStarting} onClick={() => mutate(listing.id)}>
+          Message Seller
+        </button>
+        {isStartError && <p>{startError.message}</p>}
       </div>
     </main>
   );
