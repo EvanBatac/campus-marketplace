@@ -31,6 +31,7 @@ export default function Chat() {
     }
 
     function onNewMessage(message) {
+      if (message.conversation_id !== Number(conversationId)) return;
       queryClient.setQueryData(["messages", conversationId], (old) => ({
         ...old,
         data: [...old.data, message],
