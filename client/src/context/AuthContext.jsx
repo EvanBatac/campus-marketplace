@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect } from "react";
 import { api } from "../api/client.js";
+import { socket } from "../socket.js";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -29,6 +30,17 @@ export function AuthProvider({ children }) {
     }
     loadUser();
   }, [token]);
+  
+  useEffect(() => {
+    if (!user) return;
+
+    socket.auth = { token: localStorage.getItem("token") };
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   function login(newToken) {
     localStorage.setItem("token", newToken);
@@ -39,7 +51,7 @@ export function AuthProvider({ children }) {
     setToken(null);
   }
   return (
-    <AuthContext.Provider value={{token, user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ token, user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
