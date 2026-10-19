@@ -45,6 +45,10 @@ io.on("connection", (socket) => {
   console.log("Client connected:", socket.user.id, socket.id, "joined", room);
 
   onlineUsers.set(userId, (onlineUsers.get(userId) ?? 0) + 1);
+  socket.emit("online_users", [...onlineUsers.keys()]);
+  if (onlineUsers.get(userId) === 1) {
+    socket.broadcast.emit("user_online", userId);
+  }
   console.log("Online users:", [...onlineUsers.keys()]);
 
   socket.on("send_message", async (data) => {
@@ -114,6 +118,7 @@ io.on("connection", (socket) => {
     const count = (onlineUsers.get(userId) ?? 0) - 1;
     if (count <= 0) {
       onlineUsers.delete(userId);
+      io.emit("user_offline", userId);
     } else {
       onlineUsers.set(userId, count);
     }
