@@ -1,7 +1,6 @@
-import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { socket } from "../socket";
-import { useEffect, useState } from "react";
+import { useUnread } from "../context/UnreadContext";
 
 const publicLinks = [
   { name: "Listings", path: "/listings" },
@@ -18,37 +17,15 @@ const privateLinks = [
 ];
 
 export default function Navbar() {
-  const [unread, setUnread] = useState(0);
+  const { totalUnread } = useUnread();
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [prevPathname, setPrevPathname] = useState(pathname);
 
   const links = user ? privateLinks : publicLinks;
 
   function handleLogout() {
     logout();
     navigate("/login");
-  }
-  useEffect(() => {
-    if (!user) return;
-    function onNewMessage(message) {
-      if (message.sender_id === user.id) return;
-      if (pathname.startsWith("/messages")) return;
-      setUnread((prev) => prev + 1);
-    }
-    socket.on("new_message", onNewMessage);
-
-    return () => {
-      socket.off("new_message", onNewMessage);
-    };
-  }, [pathname, user]);
-
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    if (pathname.startsWith("/messages")) {
-      setUnread(0);
-    }
   }
   return (
     <nav className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
@@ -72,9 +49,9 @@ export default function Navbar() {
               }
             >
               {name}
-              {path === "/messages" && unread > 0 && (
+              {path === "/messages" && totalUnread > 0 && (
                 <span className="ml-1 rounded-full bg-red-500 px-2 py-0.5 text-xs text-white">
-                  {unread}
+                  {totalUnread}
                 </span>
               )}
             </NavLink>

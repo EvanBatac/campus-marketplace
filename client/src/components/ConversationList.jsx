@@ -2,8 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { NavLink } from "react-router-dom";
 import { usePresence } from "../context/PresenceContext";
+import { useUnread } from "../context/UnreadContext";
 export default function ConversationList() {
   const { isOnline } = usePresence();
+  const { unreadByConversation } = useUnread();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["conversations"],
     queryFn: async () => {
@@ -52,9 +54,19 @@ export default function ConversationList() {
                     `group block rounded-2xl border p-4 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 ${isActive ? "border-blue-300 bg-blue-50 ring-1 ring-blue-200" : "border-slate-200 bg-white"}`
                   }
                 >
-                  <h3 className="wrap-anywhere text-lg font-semibold tracking-tight text-slate-900 transition group-hover:text-blue-600">
-                    {conversation.listing_title}
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className={`min-w-0 wrap-anywhere text-lg tracking-tight text-slate-900 transition group-hover:text-blue-600 ${unreadByConversation[conversation.id] > 0 ? "font-bold" : "font-semibold"}`}>
+                      {conversation.listing_title}
+                    </h3>
+                    {unreadByConversation[conversation.id] > 0 && (
+                      <span
+                        className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white"
+                        aria-label={`${unreadByConversation[conversation.id]} unread messages`}
+                      >
+                        {unreadByConversation[conversation.id]}
+                      </span>
+                    )}
+                  </div>
                   <span className="mt-2 flex items-center gap-2 wrap-anywhere text-sm text-slate-500">
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${isOnline(conversation.other_user_id) ? "bg-green-500" : "bg-slate-300"}`}
