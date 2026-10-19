@@ -4,13 +4,28 @@ import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { usePresence } from "../context/PresenceContext";
 
 export default function Chat() {
   const { conversationId } = useParams();
   const { user } = useAuth();
+  const { isOnline } = usePresence();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const bottomRef = useRef(null);
+
+  const { data: conversationsData } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      const res = await api("/api/conversations");
+      return res;
+    },
+    refetchOnMount: false,
+  });
+  const conversation = conversationsData?.data?.find(
+    (conversation) => conversation.id === Number(conversationId),
+  );
+  const online = isOnline(conversation?.other_user_id);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["messages", conversationId],
@@ -75,12 +90,15 @@ export default function Chat() {
   return (
     <div className="h-full min-h-0">
       <section aria-labelledby="chat-heading" className="flex h-full min-h-0 flex-col">
-        <h1
-          id="chat-heading"
-          className="shrink-0 border-b border-slate-100 px-4 py-5 text-xl font-bold tracking-tight text-slate-900 sm:px-6"
-        >
-          Chat
-        </h1>
+        <header className="shrink-0 border-b border-slate-100 px-4 py-5 sm:px-6">
+          <h1 id="chat-heading" className="wrap-anywhere text-xl font-bold tracking-tight text-slate-900">
+            {conversation?.other_user_name ?? "Chat"}
+          </h1>
+          <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+            <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${online ? "bg-green-500" : "bg-slate-300"}`} />
+            {online ? "Online" : "Offline"}
+          </p>
+        </header>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
             {messages.length === 0 && (

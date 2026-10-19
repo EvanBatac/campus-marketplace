@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { NavLink } from "react-router-dom";
+import { usePresence } from "../context/PresenceContext";
 export default function ConversationList() {
+  const { isOnline } = usePresence();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["conversations"],
     queryFn: async () => {
@@ -53,7 +55,12 @@ export default function ConversationList() {
                   <h3 className="wrap-anywhere text-lg font-semibold tracking-tight text-slate-900 transition group-hover:text-blue-600">
                     {conversation.listing_title}
                   </h3>
-                  <span className="mt-2 block wrap-anywhere text-sm text-slate-500">
+                  <span className="mt-2 flex items-center gap-2 wrap-anywhere text-sm text-slate-500">
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${isOnline(conversation.other_user_id) ? "bg-green-500" : "bg-slate-300"}`}
+                      role="img"
+                      aria-label={isOnline(conversation.other_user_id) ? "Online" : "Offline"}
+                    />
                     {conversation.other_user_name}
                   </span>
                 </NavLink>
