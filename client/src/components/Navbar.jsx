@@ -1,4 +1,4 @@
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { socket } from "../socket";
 import { useEffect, useState } from "react";
@@ -21,6 +21,8 @@ export default function Navbar() {
   const [unread, setUnread] = useState(0);
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
   const links = user ? privateLinks : publicLinks;
 
@@ -32,6 +34,7 @@ export default function Navbar() {
     if (!user) return;
     function onNewMessage(message) {
       if (message.sender_id === user.id) return;
+      if (pathname.startsWith("/messages")) return;
       setUnread((prev) => prev + 1);
     }
     socket.on("new_message", onNewMessage);
@@ -39,8 +42,14 @@ export default function Navbar() {
     return () => {
       socket.off("new_message", onNewMessage);
     };
-  }, [user]);
+  }, [pathname, user]);
 
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    if (pathname.startsWith("/messages")) {
+      setUnread(0);
+    }
+  }
   return (
     <nav className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
       <Link to="/listings" className="text-xl font-bold text-blue-600">
