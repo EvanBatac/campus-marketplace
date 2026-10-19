@@ -36,11 +36,16 @@ io.use((socket, next) => {
     next(new Error("unauthorized"));
   }
 });
+const onlineUsers = new Map();
 io.on("connection", (socket) => {
+  const userId = socket.user.id;
   const room = `user:${socket.user.id}`;
 
   socket.join(room);
   console.log("Client connected:", socket.user.id, socket.id, "joined", room);
+
+  onlineUsers.set(userId, (onlineUsers.get(userId) ?? 0) + 1);
+  console.log("Online users:", [...onlineUsers.keys()]);
 
   socket.on("send_message", async (data) => {
     if (typeof data !== "object" || data === null) {
@@ -105,6 +110,14 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", (reason) => {
     console.log("Client disconnected: ", socket.user.id, reason);
+    
+    const count = (onlineUsers.get(userId) ?? 0) - 1;
+    if (count <= 0) {
+      onlineUsers.delete(userId);
+    } else {
+      onlineUsers.set(userId, count);
+    }
+    console.log("Online users:", [...onlineUsers.keys()]);
   });
 });
 const port = Number(process.env.PORT);
