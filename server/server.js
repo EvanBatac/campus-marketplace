@@ -8,6 +8,7 @@ import pool from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
+import cloudinary from "./config/cloudinary.js";
 
 const app = express();
 
@@ -21,7 +22,6 @@ const io = new Server(httpServer, {
     origin: "http://localhost:5173",
   },
 });
-
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
@@ -114,7 +114,7 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", (reason) => {
     console.log("Client disconnected: ", socket.user.id, reason);
-    
+
     const count = (onlineUsers.get(userId) ?? 0) - 1;
     if (count <= 0) {
       onlineUsers.delete(userId);

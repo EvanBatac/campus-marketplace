@@ -1,8 +1,10 @@
 import pool from "../config/db.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 export const createListing = async (req, res) => {
   try {
     const seller_id = req.user.id;
-    const { title, description, price, category, image_url } = req.body ?? {};
+    const { title, description, category, image_url } = req.body ?? {};
+    const price = Number(req.body.price);
 
     if (typeof title !== "string") {
       return res.status(400).json({
@@ -57,21 +59,41 @@ export const createListing = async (req, res) => {
       });
     }
 
+    const uploaded = await Promise.all(
+      (req.files ?? []).map((file) => uploadToCloudinary(file.buffer)),
+    );
+    const coverUrl = uploaded[0]?.url ?? null;
+
     const [result] = await pool.query(
-      "INSERT INTO listings (seller_id, title, description, price, category, image_url) VALUES ( ? , ?, ?, ?, ?, ? )",
+      "INSERT INTO listings (seller_id, title, description, price, category, image_url) VALUES (?, ?, ?, ?, ?, ?)",
       [
         seller_id,
         normalizedTitle,
         description ?? null,
         price,
         category ?? null,
-        image_url ?? null,
+        coverUrl,
       ],
     );
+    const listingId = result.insertId;
+
+    if (uploaded.length > 0) {
+      const imageRows = uploaded.map((img, index) => [
+        listingId,
+        img.url,
+        img.public_id,
+        index,
+      ]);
+
+      await pool.query(
+        "INSERT INTO listing_images (listing_id, url, public_id, position) VALUES ?",
+        [imageRows],
+      );
+    }
 
     const [rows] = await pool.query(
       "SELECT * FROM listings WHERE id = ? AND seller_id = ?",
-      [result.insertId, seller_id],
+      [listingId, seller_id],
     );
     res.status(201).json({
       success: true,
