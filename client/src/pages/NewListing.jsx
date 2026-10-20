@@ -191,6 +191,11 @@ export default function NewListing() {
             accept="image/*"
             {...register("images")}
           />
+          {errors.images && (
+            <p id="images-error" className="mt-2 text-sm text-red-600">
+              {errors.images.message}
+            </p>
+          )}
           <button
             type="submit"
             disabled={isPending}
