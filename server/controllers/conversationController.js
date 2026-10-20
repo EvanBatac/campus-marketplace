@@ -134,17 +134,22 @@ export const getMyConversations = async (req, res) => {
 
     const [rows] = await pool.query(
       `SELECT c.id, c.listing_id, c.buyer_id, c.seller_id, c.created_at,
-              l.title AS listing_title,
-              u.id AS other_user_id,
-              u.name AS other_user_name
-       FROM conversations c
-       JOIN listings l ON l.id = c.listing_id
-       JOIN users u ON u.id = IF(c.buyer_id = ?, c.seller_id, c.buyer_id) 
-       WHERE ( c.buyer_id = ? OR c.seller_id = ? ) AND EXISTS (
-       SELECT 1 FROM messages m WHERE m.conversation_id = c.id
-       )
-       ORDER BY c.created_at DESC`,
-      [userId, userId, userId],
+          l.title AS listing_title,
+          u.id AS other_user_id,
+          u.name AS other_user_name,
+          (SELECT COUNT(*)
+           FROM messages m2
+           WHERE m2.conversation_id = c.id
+             AND m2.read_at IS NULL
+             AND m2.sender_id <> ?) AS unread_count
+   FROM conversations c
+   JOIN listings l ON l.id = c.listing_id
+   JOIN users u ON u.id = IF(c.buyer_id = ?, c.seller_id, c.buyer_id)
+   WHERE ( c.buyer_id = ? OR c.seller_id = ? ) AND EXISTS (
+     SELECT 1 FROM messages m WHERE m.conversation_id = c.id
+   )
+   ORDER BY c.created_at DESC`,
+      [userId, userId, userId, userId],
     );
 
     res.status(200).json({ success: true, data: rows });
