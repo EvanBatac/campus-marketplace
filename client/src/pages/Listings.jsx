@@ -99,6 +99,13 @@ export default function Listings() {
                 key={listing.id}
                 className="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 transition hover:border-blue-200"
               >
+                {listing.image_url && (
+                  <img
+                    src={listing.image_url}
+                    alt={listing.title}
+                    className="w-full h-48 object-cover rounded-t-lg"
+                  />
+                )}
                 <Link
                   to={`/listings/${listing.id}`}
                   className="rounded-sm text-slate-900 transition hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600"
