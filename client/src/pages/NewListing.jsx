@@ -185,12 +185,25 @@ export default function NewListing() {
             </p>
           )}
 
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            {...register("images")}
-          />
+          <div>
+            <label
+              htmlFor="images"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
+              Images (up to 4)
+            </label>
+            <input
+              id="images"
+              type="file"
+              multiple
+              accept="image/*"
+              className="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
+              {...register("images")}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              JPG or PNG, max 5 MB each
+            </p>
+          </div>
           {errors.images && (
             <p id="images-error" className="mt-2 text-sm text-red-600">
               {errors.images.message}
