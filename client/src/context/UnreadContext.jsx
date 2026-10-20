@@ -38,9 +38,10 @@ export function UnreadProvider({ children }) {
     if (!user) return;
 
     function onNewMessage(message) {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+
       if (message.sender_id === user.id) return;
 
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
       const conversationId = Number(message.conversation_id);
       if (conversationId === openConversationId) return;
 
