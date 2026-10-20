@@ -139,8 +139,10 @@ export const getMyConversations = async (req, res) => {
               u.name AS other_user_name
        FROM conversations c
        JOIN listings l ON l.id = c.listing_id
-       JOIN users u ON u.id = IF(c.buyer_id = ?, c.seller_id, c.buyer_id)
-       WHERE c.buyer_id = ? OR c.seller_id = ?
+       JOIN users u ON u.id = IF(c.buyer_id = ?, c.seller_id, c.buyer_id) 
+       WHERE ( c.buyer_id = ? OR c.seller_id = ? ) AND EXISTS (
+       SELECT 1 FROM messages m WHERE m.conversation_id = c.id
+       )
        ORDER BY c.created_at DESC`,
       [userId, userId, userId],
     );
