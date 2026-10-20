@@ -8,6 +8,7 @@ import {
 } from "../controllers/listingController.js";
 import authenticate from "../middleware/authMiddleware.js";
 import { uploadImages } from "../middleware/uploadMiddleware.js";
+
 const router = express.Router();
 
 router.post("/", authenticate, uploadImages, createListing);

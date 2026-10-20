@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
+import { deleteFromCloudinary } from "../utils/deleteFromCloudinary.js";
 export const createListing = async (req, res) => {
   try {
     const seller_id = req.user.id;
@@ -373,10 +374,21 @@ export const deleteListing = async (req, res) => {
         message: "You are not authorized to perform this action",
       });
     }
+    const [images] = await pool.query(
+      "SELECT public_id FROM listing_images WHERE listing_id = ?",
+      [id],
+    );
     const [result] = await pool.query(
       "DELETE FROM listings WHERE id = ? AND seller_id = ?",
       [id, req.user.id],
     );
+    for (const { public_id } of images) {
+      try {
+        await deleteFromCloudinary(public_id);
+      } catch (error) {
+        console.error("Failed to delete listing image from Cloudinary:", public_id, error);
+      }
+    }
     res.status(200).json({
       success: true,
       message: "Listing deleted successfully",
