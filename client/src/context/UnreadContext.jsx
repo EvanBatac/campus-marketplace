@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { matchPath, useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "../api/client";
 import { useAuth } from "./AuthContext";
 import { socket } from "../socket";
 
@@ -11,44 +12,60 @@ export function UnreadProvider({ children }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
-  const [unreadByConversation, setUnreadByConversation] = useState({});
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  const [prevUserId, setPrevUserId] = useState(user?.id ?? null);
-  const userId = user?.id ?? null;
+  const { data } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      const res = await api("/api/conversations");
+      return res;
+    },
+    enabled: !!user,
+  });
   const match = matchPath("/messages/:conversationId", pathname);
   const openConversationId = match ? Number(match.params.conversationId) : null;
 
-  if (userId !== prevUserId) {
-    setPrevUserId(userId);
-    setUnreadByConversation({});
-  }
-
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    if (openConversationId !== null) {
-      setUnreadByConversation((previous) => {
-        const next = { ...previous };
-        delete next[openConversationId];
-        return next;
-      });
+  const unreadByConversation = {};
+  if (user) {
+    for (const conversation of data?.data ?? []) {
+      const count = Number(conversation.unread_count);
+      if (count > 0) unreadByConversation[conversation.id] = count;
     }
   }
 
   useEffect(() => {
+    if (!openConversationId || !user) return;
+
+    async function markRead() {
+      try {
+        await api(`/api/conversations/${openConversationId}/read`, {
+          method: "PATCH",
+        });
+        await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    markRead();
+  }, [openConversationId, user, queryClient]);
+
+  useEffect(() => {
     if (!user) return;
 
-    function onNewMessage(message) {
-      queryClient.invalidateQueries({ queryKey: ["conversations"] });
-
-      if (message.sender_id === user.id) return;
-
-      const conversationId = Number(message.conversation_id);
-      if (conversationId === openConversationId) return;
-
-      setUnreadByConversation((previous) => ({
-        ...previous,
-        [conversationId]: (previous[conversationId] ?? 0) + 1,
-      }));
+    async function onNewMessage(message) {
+      try {
+        if (
+          message.sender_id !== user.id &&
+          Number(message.conversation_id) === openConversationId
+        ) {
+          await api(`/api/conversations/${openConversationId}/read`, {
+            method: "PATCH",
+          });
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      }
     }
 
     socket.on("new_message", onNewMessage);
