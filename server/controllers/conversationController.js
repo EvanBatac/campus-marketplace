@@ -128,6 +128,52 @@ export const getMessages = async (req, res) => {
   }
 };
 
+export const markConversationRead = async (req, res) => {
+  try {
+    const conversationId = Number(req.params.id);
+    const userId = req.user.id;
+    const isValidId = Number.isInteger(conversationId) && conversationId > 0;
+
+    if (!isValidId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid id",
+      });
+    }
+    const [conversationRows] = await pool.query(
+      "SELECT id, buyer_id, seller_id FROM conversations WHERE id = ?",
+      [conversationId],
+    );
+    if (conversationRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Conversation not found",
+      });
+    }
+    const conversation = conversationRows[0];
+    if (
+      conversation.seller_id !== userId &&
+      conversation.buyer_id !== userId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to perform this action",
+      });
+    }
+    await pool.query(
+      "UPDATE messages SET read_at = NOW() WHERE conversation_id = ? AND sender_id <> ? AND read_at IS NULL",
+      [conversationId, userId],
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export const getMyConversations = async (req, res) => {
   try {
     const userId = req.user.id;
