@@ -199,9 +199,13 @@ export const getListingById = async (req, res) => {
         message: "Listing not found",
       });
     }
+    const [imageRows] = await pool.query(
+      "SELECT id, url, position FROM listing_images WHERE listing_id = ? ORDER BY position",
+      [id],
+    );
     res.status(200).json({
       success: true,
-      data: rows[0],
+      data: { ...rows[0], images: imageRows },
     });
   } catch (error) {
     console.error(error);
