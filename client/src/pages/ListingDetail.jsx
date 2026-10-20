@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../api/client";
 export default function ListingDetail() {
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, isError, error } = useQuery({
@@ -63,6 +65,26 @@ export default function ListingDetail() {
             aria-labelledby="listing-title"
             className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-10"
           >
+            {listing.images?.length > 0 && (
+              <div className="mb-6">
+                <img
+                  src={listing.images[selectedIndex].url}
+                  alt={listing.title}
+                  className="w-full h-96 object-cover rounded-lg"
+                />
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {listing.images.map((img, index) => (
+                    <img
+                      key={img.id}
+                      src={img.url}
+                      alt={`${listing.title} image ${index + 1}`}
+                      onClick={() => setSelectedIndex(index)}
+                      className={`w-20 h-20 object-cover rounded cursor-pointer ${selectedIndex === index ? "ring-2 ring-blue-500" : ""}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="mb-5 flex flex-wrap gap-2">
               <span className="max-w-full wrap-break-word rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
                 {listing.category}
