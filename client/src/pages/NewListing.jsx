@@ -19,7 +19,9 @@ const listingSchema = z.object({
   category: z.enum(["books", "electronics", "furniture", "clothing", "other"], {
     error: "Please select a category",
   }),
-  images: z.any(),
+  images: z.any().refine((files) => !files || files.length <= 4, {
+    message: "You can upload up to 4 images",
+  }),
 });
 export default function NewListing() {
   const navigate = useNavigate();
