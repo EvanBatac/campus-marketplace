@@ -5,6 +5,7 @@ import {
   getListingById,
   updateListing,
   deleteListing,
+  getMyListings,
 } from "../controllers/listingController.js";
 import authenticate from "../middleware/authMiddleware.js";
 import { uploadImages } from "../middleware/uploadMiddleware.js";
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post("/", authenticate, uploadImages, createListing);
 router.get("/", getListings);
+router.get("/mine", authenticate, getMyListings);
 router.get("/:id", getListingById);
 router.put("/:id", authenticate, updateListing);
 router.delete("/:id", authenticate, deleteListing);

@@ -386,7 +386,11 @@ export const deleteListing = async (req, res) => {
       try {
         await deleteFromCloudinary(public_id);
       } catch (error) {
-        console.error("Failed to delete listing image from Cloudinary:", public_id, error);
+        console.error(
+          "Failed to delete listing image from Cloudinary:",
+          public_id,
+          error,
+        );
       }
     }
     res.status(200).json({
@@ -401,6 +405,26 @@ export const deleteListing = async (req, res) => {
       });
     }
     console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const getMyListings = async (req, res) => {
+  try {
+    const seller_id = req.user.id;
+
+    const [rows] = await pool.query(
+      "SELECT id, title, description, price, category, image_url, status, created_at FROM listings WHERE seller_id = ? ORDER BY created_at DESC",
+      [seller_id],
+    );
+    res.status(200).json({
+      success: true,
+      data: rows,
+    });
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: "Internal server error",
