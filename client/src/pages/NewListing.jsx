@@ -1,28 +1,9 @@
-import { z } from "zod";
+import { listingSchema } from "../schemas/listingSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useNavigate } from "react-router-dom";
-const listingSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title is required")
-    .max(100, "Title too long"),
-  description: z
-    .string()
-    .trim()
-    .min(1, "Description is required")
-    .max(1000, "Description is too long (max 1000 characters)"),
-  price: z.coerce.number().positive("Price must be greater than 0"),
-  category: z.enum(["books", "electronics", "furniture", "clothing", "other"], {
-    error: "Please select a category",
-  }),
-  images: z.any().refine((files) => !files || files.length <= 4, {
-    message: "You can upload up to 4 images",
-  }),
-});
 export default function NewListing() {
   const navigate = useNavigate();
   const {
