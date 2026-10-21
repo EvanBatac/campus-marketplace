@@ -16,7 +16,7 @@ export const listingSchema = z.object({
     error: "Please select a category",
   }),
   status: z.enum(["available", "sold"]).optional(),
-  images: z.any().refine((files) => !files || files.length <= 4, {
+  images: z.any().optional().refine((files) => !files || files.length <= 4, {
     message: "You can upload up to 4 images",
   }),
 });
