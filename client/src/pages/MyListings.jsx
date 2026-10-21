@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function MyListings() {
   const { user } = useAuth();
-
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["listings", "mine", user?.id],
     enabled: Boolean(user),
@@ -15,6 +15,30 @@ export default function MyListings() {
     },
   });
 
+  const {
+    mutate,
+    isPending,
+    variables,
+    isError: isDeleteError,
+    error: deleteError,
+  } = useMutation({
+    mutationFn: async (id) => {
+      const res = await api(`/api/listings/${id}`, {
+        method: "DELETE",
+      });
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["listings"],
+      });
+    },
+  });
+  function handleDelete(id) {
+    const confirmed = window.confirm("Delete this listing?");
+    if (!confirmed) return;
+    mutate(id);
+  }
   const listings = data?.data ?? [];
 
   return (
@@ -25,6 +49,7 @@ export default function MyListings() {
       {!isLoading && !isError && listings.length === 0 && (
         <p>You haven't created any listings yet.</p>
       )}
+      {isDeleteError && <p role="alert">{deleteError.message}</p>}
       {!isLoading && !isError && listings.length > 0 && (
         <ul>
           {listings.map((listing) => (
@@ -45,9 +70,17 @@ export default function MyListings() {
                 })}
               </p>
               <p>Status: {listing.status}</p>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => handleDelete(listing.id)}
+              >
+                {isPending && variables === listing.id
+                  ? "Deleting..."
+                  : "Delete"}
+              </button>
             </li>
           ))}
-          <button></button>
         </ul>
       )}
     </>
