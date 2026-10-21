@@ -16,7 +16,6 @@ export default function EditListing() {
   if (isError) return <p role="alert">{error.message}</p>;
 
   const listing = data?.data;
-  console.log(listing);
   return (
     <>
       <EditListingForm listing={listing} />

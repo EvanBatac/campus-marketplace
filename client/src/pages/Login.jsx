@@ -25,7 +25,6 @@ export default function Login() {
         method: "POST",
         body: data,
       });
-      console.log(res);
       login(res.token);
       navigate("/listings");
     } catch (err) {
