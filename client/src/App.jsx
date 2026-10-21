@@ -10,6 +10,7 @@ import MyListings from "./pages/MyListings";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import NewListing from "./pages/NewListing";
+import EditListing from "./pages/EditListing";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -24,6 +25,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/listings/new" element={<NewListing />} />
           <Route path="/my-listings" element={<MyListings />} />
+          <Route path="/listings/:id/edit" element={<EditListing />} />
           <Route path="/messages" element={<MessagesLayout />}>
             <Route index element={<Messages />} />
             <Route path=":conversationId" element={<Chat />} />

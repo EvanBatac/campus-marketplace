@@ -79,6 +79,7 @@ export default function MyListings() {
                   ? "Deleting..."
                   : "Delete"}
               </button>
+              <Link to={`/listings/${listing.id}/edit`}>Edit</Link>
             </li>
           ))}
         </ul>
