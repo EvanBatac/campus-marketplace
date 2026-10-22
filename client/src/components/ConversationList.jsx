@@ -1,13 +1,16 @@
+import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { NavLink } from "react-router-dom";
 import { usePresence } from "../context/PresenceContext";
 import { useUnread } from "../context/UnreadContext";
 export default function ConversationList() {
+  const { user } = useAuth();
   const { isOnline } = usePresence();
   const { unreadByConversation } = useUnread();
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", user?.id],
+    enabled: Boolean(user),
     queryFn: async () => {
       const res = await api("/api/conversations");
       return res;

@@ -13,12 +13,12 @@ export function UnreadProvider({ children }) {
   const { pathname } = useLocation();
   const queryClient = useQueryClient();
   const { data } = useQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", user?.id],
     queryFn: async () => {
       const res = await api("/api/conversations");
       return res;
     },
-    enabled: !!user,
+    enabled: Boolean(user),
   });
   const match = matchPath("/messages/:conversationId", pathname);
   const openConversationId = match ? Number(match.params.conversationId) : null;
@@ -39,7 +39,7 @@ export function UnreadProvider({ children }) {
         await api(`/api/conversations/${openConversationId}/read`, {
           method: "PATCH",
         });
-        await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        await queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
       } catch (error) {
         console.error(error);
       }
@@ -64,7 +64,7 @@ export function UnreadProvider({ children }) {
       } catch (error) {
         console.error(error);
       } finally {
-        await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        await queryClient.invalidateQueries({ queryKey: ["conversations", user?.id] });
       }
     }
 

@@ -1,10 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useContext, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client.js";
 import { socket } from "../socket.js";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,8 +47,10 @@ export function AuthProvider({ children }) {
   function login(newToken) {
     localStorage.setItem("token", newToken);
     setToken(newToken);
+    queryClient.clear();
   }
   function logout() {
+    queryClient.clear();
     localStorage.removeItem("token");
     setToken(null);
   }

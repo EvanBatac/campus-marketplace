@@ -15,7 +15,8 @@ export default function Chat() {
   const bottomRef = useRef(null);
 
   const { data: conversationsData } = useQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", user?.id],
+    enabled: Boolean(user),
     queryFn: async () => {
       const res = await api("/api/conversations");
       return res;
@@ -28,7 +29,8 @@ export default function Chat() {
   const online = isOnline(conversation?.other_user_id);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["messages", conversationId],
+    queryKey: ["messages", user?.id, conversationId],
+    enabled: Boolean(user),
     queryFn: async () => {
       const res = await api(`/api/conversations/${conversationId}/messages`);
       return res;
@@ -38,7 +40,7 @@ export default function Chat() {
   useEffect(() => {
     function onNewMessage(message) {
       if (message.conversation_id !== Number(conversationId)) return;
-      queryClient.setQueryData(["messages", conversationId], (old) => ({
+      queryClient.setQueryData(["messages", user?.id, conversationId], (old) => ({
         ...old,
         data: [...old.data, message],
       }));
@@ -49,7 +51,7 @@ export default function Chat() {
     return () => {
       socket.off("new_message", onNewMessage);
     };
-  }, [conversationId, queryClient]);
+  }, [conversationId, queryClient, user?.id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
