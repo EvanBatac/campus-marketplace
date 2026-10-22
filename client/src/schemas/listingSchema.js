@@ -4,19 +4,25 @@ export const listingSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(1, "Title is required")
-    .max(100, "Title too long"),
+    .min(3, "Title must be at least 3 characters")
+    .max(120, "Title too long"),
   description: z
     .string()
     .trim()
-    .min(1, "Description is required")
-    .max(1000, "Description is too long (max 1000 characters)"),
-  price: z.coerce.number().positive("Price must be greater than 0"),
+    .max(1000, "Description is too long (max 1000 characters)")
+    .optional(),
+  price: z.coerce
+    .number()
+    .positive("Price must be greater than 0")
+    .max(99999999.99, "Price is too high"),
   category: z.enum(["books", "electronics", "furniture", "clothing", "other"], {
     error: "Please select a category",
   }),
   status: z.enum(["available", "sold"]).optional(),
-  images: z.any().optional().refine((files) => !files || files.length <= 4, {
-    message: "You can upload up to 4 images",
-  }),
+  images: z
+    .any()
+    .optional()
+    .refine((files) => !files || files.length <= 4, {
+      message: "You can upload up to 4 images",
+    }),
 });
