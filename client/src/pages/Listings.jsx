@@ -1,3 +1,4 @@
+import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import { useState } from "react";
 import { api } from "../api/client";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
@@ -71,14 +72,7 @@ export default function Listings() {
             Updating...
           </p>
         )}
-        {isLoading && (
-          <p
-            role="status"
-            className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm"
-          >
-            Loading...
-          </p>
-        )}
+        {isLoading && <LoadingSkeleton label="Loading listings" />}
         {isError && (
           <p
             role="alert"
@@ -93,19 +87,30 @@ export default function Listings() {
           </p>
         )}
         {!isLoading && !isError && (
-          <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
               <li
                 key={listing.id}
-                className="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 transition hover:border-blue-200"
+                className="flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/50 transition hover:border-blue-200"
               >
-                {listing.image_url && (
-                  <img
-                    src={listing.image_url}
-                    alt={listing.title}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                  />
-                )}
+                <Link
+                  to={`/listings/${listing.id}`}
+                  aria-label={`View ${listing.title}`}
+                  className="mb-5 block overflow-hidden rounded-xl bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600"
+                >
+                  {listing.image_url ? (
+                    <img
+                      src={listing.image_url}
+                      alt={listing.title}
+                      loading="lazy"
+                      className="h-52 w-full object-cover transition duration-300 motion-safe:hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-52 items-center justify-center text-sm text-slate-400">
+                      No image added
+                    </div>
+                  )}
+                </Link>
                 <Link
                   to={`/listings/${listing.id}`}
                   className="rounded-sm text-slate-900 transition hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600"
@@ -143,17 +148,17 @@ export default function Listings() {
           className="mt-10 flex flex-wrap items-center justify-center gap-4"
         >
           <button
-            disabled={page === 1}
+            disabled={page === 1 || isFetching}
             onClick={previousPage}
             className="rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
           >
             Previous
           </button>
           <span className="text-sm font-medium text-slate-600">
-            Page {page} of {totalPages}
+            Page {page} of {Math.max(1, totalPages ?? 1)}
           </span>
           <button
-            disabled={page >= totalPages}
+            disabled={isFetching || !totalPages || page >= totalPages}
             onClick={nextPage}
             className="rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
           >

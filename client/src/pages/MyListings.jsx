@@ -1,3 +1,4 @@
+import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import { useToast } from "../hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -84,14 +85,7 @@ export default function MyListings() {
             <span aria-hidden="true">+</span> Create listing
           </Link>
         </header>
-        {isLoading && (
-          <p
-            role="status"
-            className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500"
-          >
-            Loading your listings...
-          </p>
-        )}
+        {isLoading && <LoadingSkeleton label="Loading your listings" />}
         {isError && (
           <p
             role="alert"

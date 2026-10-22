@@ -1,3 +1,5 @@
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 import { useToast } from "../hooks/useToast";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -86,14 +88,13 @@ export default function Login() {
             >
               Email address
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? "email-error" : undefined}
-              className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors.email ? "border-red-400" : "border-slate-300"}`}
               {...register("email")}
             />
             {errors.email && (
@@ -114,14 +115,13 @@ export default function Login() {
             >
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               autoComplete="current-password"
               placeholder="Enter your password"
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? "password-error" : undefined}
-              className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors.password ? "border-red-400" : "border-slate-300"}`}
               {...register("password")}
             />
             {errors.password && (
@@ -140,13 +140,9 @@ export default function Login() {
               {errors.root.message}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:opacity-60"
-          >
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
             Log in
-          </button>
+          </Button>
         </form>
 
         <p className="mt-8 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">

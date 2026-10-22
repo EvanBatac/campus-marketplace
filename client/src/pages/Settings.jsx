@@ -1,3 +1,6 @@
+import Field from "../components/ui/Field";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
@@ -5,35 +8,8 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
 
-const inputClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 aria-invalid:border-red-400";
-const buttonClass =
-  "rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60";
 const cardClass =
   "rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-8";
-
-function Field({ label, id, error, children }) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="mb-2 block text-sm font-medium text-slate-700"
-      >
-        {label}
-      </label>
-      {children}
-      {error && (
-        <p
-          id={`${id}-error`}
-          role="alert"
-          className="mt-2 text-sm text-red-600"
-        >
-          {error.message}
-        </p>
-      )}
-    </div>
-  );
-}
 
 export default function Settings() {
   const { user, updateUser, logout } = useAuth();
@@ -42,7 +18,7 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const profile = useForm({ defaultValues: { name: user.name } });
   const password = useForm({
-    defaultValueßs: {
+    defaultValues: {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
@@ -128,10 +104,9 @@ export default function Settings() {
                 id="name"
                 error={profile.formState.errors.name}
               >
-                <input
+                <Input
                   id="name"
                   autoComplete="name"
-                  className={inputClass}
                   aria-invalid={Boolean(profile.formState.errors.name)}
                   aria-describedby={
                     profile.formState.errors.name ? "name-error" : undefined
@@ -151,13 +126,12 @@ export default function Settings() {
                 >
                   Email address
                 </label>
-                <input
+                <Input
                   id="settings-email"
                   type="email"
                   readOnly
                   value={user.email}
                   aria-describedby="email-help"
-                  className={`${inputClass} bg-slate-50 text-slate-500`}
                 />
                 <p
                   id="email-help"
@@ -173,15 +147,14 @@ export default function Settings() {
               </p>
             )}
             <div className="flex justify-end border-t border-slate-100 pt-5">
-              <button
+              <Button
                 type="submit"
                 disabled={
                   !profile.formState.isDirty || profile.formState.isSubmitting
                 }
-                className={buttonClass}
               >
                 {profile.formState.isSubmitting ? "Saving..." : "Save profile"}
-              </button>
+              </Button>
             </div>
           </form>
         </section>
@@ -255,11 +228,10 @@ export default function Settings() {
                   label={field.label}
                   error={password.formState.errors[field.name]}
                 >
-                  <input
+                  <Input
                     id={field.name}
                     type="password"
                     autoComplete={field.autoComplete}
-                    className={inputClass}
                     aria-invalid={Boolean(
                       password.formState.errors[field.name],
                     )}
@@ -281,15 +253,11 @@ export default function Settings() {
               </p>
             )}
             <div className="flex justify-end border-t border-slate-100 pt-5">
-              <button
-                type="submit"
-                disabled={password.formState.isSubmitting}
-                className={buttonClass}
-              >
+              <Button type="submit" disabled={password.formState.isSubmitting}>
                 {password.formState.isSubmitting
                   ? "Updating..."
                   : "Update password"}
-              </button>
+              </Button>
             </div>
           </form>
         </section>

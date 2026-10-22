@@ -1,3 +1,5 @@
+import Button from "./ui/Button";
+import Input from "./ui/Input";
 import { useToast } from "../hooks/useToast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,8 +53,6 @@ export default function EditListingForm({ listing }) {
   function onSubmit(data) {
     mutate(data);
   }
-  const fieldClass = (name) =>
-    `w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors[name] ? "border-red-400" : "border-slate-300"}`;
   const labelClass = "mb-2 block text-sm font-medium text-slate-700";
 
   return (
@@ -69,45 +69,45 @@ export default function EditListingForm({ listing }) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <div>
       <label htmlFor="title" className={labelClass}>Title</label>
-      <input id="title" className={fieldClass("title")} aria-invalid={Boolean(errors.title)} aria-describedby={errors.title ? "title-error" : undefined} type="text" {...register("title")} />
+      <Input id="title" aria-invalid={Boolean(errors.title)} aria-describedby={errors.title ? "title-error" : undefined} type="text" {...register("title")} />
       {errors.title && <p id="title-error" role="alert" className="mt-2 text-sm text-red-600">{errors.title.message}</p>}
       </div>
       <div>
       <label htmlFor="description" className={labelClass}>Description</label>
-      <textarea rows={5} id="description" className={fieldClass("description")} aria-invalid={Boolean(errors.description)} aria-describedby={errors.description ? "description-error" : undefined} {...register("description")}></textarea>
+      <Input as="textarea" rows={5} id="description" aria-invalid={Boolean(errors.description)} aria-describedby={errors.description ? "description-error" : undefined} {...register("description")}></Input>
       {errors.description && <p id="description-error" role="alert" className="mt-2 text-sm text-red-600">{errors.description.message}</p>}
       </div>
       <div>
       <label htmlFor="price" className={labelClass}>Price</label>
-      <input id="price" className={fieldClass("price")} aria-invalid={Boolean(errors.price)} aria-describedby={errors.price ? "price-error" : undefined} type="number" step="0.01" {...register("price")} />
+      <Input id="price" aria-invalid={Boolean(errors.price)} aria-describedby={errors.price ? "price-error" : undefined} type="number" step="0.01" {...register("price")} />
       {errors.price && <p id="price-error" role="alert" className="mt-2 text-sm text-red-600">{errors.price.message}</p>}
       </div>
       <div>
       <label htmlFor="category" className={labelClass}>Category</label>
-      <select id="category" className={fieldClass("category")} aria-invalid={Boolean(errors.category)} aria-describedby={errors.category ? "category-error" : undefined} {...register("category")}>
+      <Input as="select" id="category" aria-invalid={Boolean(errors.category)} aria-describedby={errors.category ? "category-error" : undefined} {...register("category")}>
         <option value="">Select Category</option>
         <option value="books">Books</option>
         <option value="electronics">Electronics</option>
         <option value="furniture">Furniture</option>
         <option value="clothing">Clothing</option>
         <option value="other">Other</option>
-      </select>
+      </Input>
       {errors.category && <p id="category-error" role="alert" className="mt-2 text-sm text-red-600">{errors.category.message}</p>}
       </div>
       <div>
       <label htmlFor="status" className={labelClass}>Status</label>
-      <select id="status" className={fieldClass("status")} aria-invalid={Boolean(errors.status)} aria-describedby={errors.status ? "status-error" : undefined} {...register("status")}>
+      <Input as="select" id="status" aria-invalid={Boolean(errors.status)} aria-describedby={errors.status ? "status-error" : undefined} {...register("status")}>
         <option value="available">Available</option>
         <option value="sold">Sold</option>
-      </select>
+      </Input>
       {errors.status && <p id="status-error" role="alert" className="mt-2 text-sm text-red-600">{errors.status.message}</p>}
       </div>
       {isError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error.message}</p>}
       <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
       <Link to="/my-listings" className="rounded-lg border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Cancel</Link>
-      <button disabled={isPending} type="submit" className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60">
+      <Button disabled={isPending} type="submit">
         {isPending ? "Saving..." : "Save changes"}
-      </button>
+      </Button>
       </div>
     </form>
         </div>

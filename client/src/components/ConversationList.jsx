@@ -1,3 +1,4 @@
+import LoadingSkeleton from "./ui/LoadingSkeleton";
 import { useAuth } from "../context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
@@ -30,12 +31,7 @@ export default function ConversationList() {
           </h1>
         </header>
         {isLoading ? (
-          <p
-            role="status"
-            className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-xl shadow-slate-200/50"
-          >
-            Loading...
-          </p>
+          <LoadingSkeleton variant="conversations" count={4} label="Loading conversations" />
         ) : isError ? (
           <p
             role="alert"

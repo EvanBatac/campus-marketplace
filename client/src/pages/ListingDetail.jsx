@@ -1,11 +1,14 @@
 import { useToast } from "../hooks/useToast";
-import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import ListingGallery from "../components/ListingGallery";
+import LoadingSkeleton from "../components/ui/LoadingSkeleton";
+import Button from "../components/ui/Button";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../api/client";
 export default function ListingDetail() {
   const toast = useToast();
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, isError, error } = useQuery({
@@ -48,12 +51,7 @@ export default function ListingDetail() {
           ← Back to listings
         </Link>
         {isLoading ? (
-          <p
-            role="status"
-            className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-xl shadow-slate-200/50"
-          >
-            Loading...
-          </p>
+          <LoadingSkeleton variant="detail" count={1} label="Loading listing" />
         ) : isError ? (
           <p
             role="alert"
@@ -70,26 +68,7 @@ export default function ListingDetail() {
             aria-labelledby="listing-title"
             className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-10"
           >
-            {listing.images?.length > 0 && (
-              <div className="mb-6">
-                <img
-                  src={listing.images[selectedIndex].url}
-                  alt={listing.title}
-                  className="w-full h-96 object-cover rounded-lg"
-                />
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {listing.images.map((img, index) => (
-                    <img
-                      key={img.id}
-                      src={img.url}
-                      alt={`${listing.title} image ${index + 1}`}
-                      onClick={() => setSelectedIndex(index)}
-                      className={`w-20 h-20 object-cover rounded cursor-pointer ${selectedIndex === index ? "ring-2 ring-blue-500" : ""}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+            <ListingGallery key={listing.id} images={listing.images?.length ? listing.images : listing.image_url ? [{ url: listing.image_url }] : []} title={listing.title} />
             <div className="mb-5 flex flex-wrap gap-2">
               <span className="max-w-full wrap-break-word rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
                 {listing.category}
@@ -135,13 +114,17 @@ export default function ListingDetail() {
             </section>
           </article>
         )}
-        <button
-          disabled={isStarting}
-          onClick={() => mutate(listing.id)}
-          className="mt-6 w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
-        >
-          Message Seller
-        </button>
+        {listing && !isLoading && !isError && (
+          <div className="mt-6">
+            {user?.id === listing.seller_id ? (
+              <Link to={`/listings/${listing.id}/edit`} className="flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600">Edit your listing</Link>
+            ) : !user ? (
+              <Button className="w-full" disabled={isAuthLoading} onClick={() => navigate("/login")}>Log in to message seller</Button>
+            ) : (
+              <Button className="w-full" disabled={isStarting || listing.status !== "available"} onClick={() => mutate(listing.id)}>{listing.status !== "available" ? "This item has sold" : isStarting ? "Opening conversation..." : "Message seller"}</Button>
+            )}
+          </div>
+        )}
         {isStartError && (
           <p role="alert" className="mt-2 text-sm text-red-600">
             {startError.message}

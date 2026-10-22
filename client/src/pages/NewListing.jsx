@@ -1,7 +1,10 @@
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import ListingImagePicker from "../components/ListingImagePicker";
 import { useToast } from "../hooks/useToast";
 import { listingSchema } from "../schemas/listingSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +13,7 @@ export default function NewListing() {
   const navigate = useNavigate();
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm({
@@ -75,13 +79,12 @@ export default function NewListing() {
             >
               Title
             </label>
-            <input
+            <Input
               type="text"
               id="title"
               placeholder="e.g book"
               aria-invalid={Boolean(errors.title)}
               aria-describedby={errors.title ? "title-error" : undefined}
-              className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors.title ? "border-red-400" : "border-slate-300"}`}
               {...register("title")}
             />
             {errors.title && (
@@ -97,14 +100,14 @@ export default function NewListing() {
             >
               Description
             </label>
-            <textarea
+            <Input
+              as="textarea"
               rows={5}
               id="description"
               aria-invalid={Boolean(errors.description)}
               aria-describedby={
                 errors.description ? "description-error" : undefined
               }
-              className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors.description ? "border-red-400" : "border-slate-300"}`}
               {...register("description")}
             />
             {errors.description && (
@@ -120,14 +123,13 @@ export default function NewListing() {
             >
               Price
             </label>
-            <input
+            <Input
               id="price"
               type="number"
               step="0.01"
               placeholder="100.00"
               aria-invalid={Boolean(errors.price)}
               aria-describedby={errors.price ? "price-error" : undefined}
-              className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors.price ? "border-red-400" : "border-slate-300"}`}
               {...register("price")}
             />
             {errors.price && (
@@ -143,11 +145,11 @@ export default function NewListing() {
             >
               Category
             </label>
-            <select
+            <Input
+              as="select"
               id="category"
               aria-invalid={Boolean(errors.category)}
               aria-describedby={errors.category ? "category-error" : undefined}
-              className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors.category ? "border-red-400" : "border-slate-300"}`}
               {...register("category")}
             >
               <option value="">Select Category</option>
@@ -156,7 +158,7 @@ export default function NewListing() {
               <option value="furniture">Furniture</option>
               <option value="clothing">Clothing</option>
               <option value="other">Other</option>
-            </select>
+            </Input>
             {errors.category && (
               <p id="category-error" className="mt-2 text-sm text-red-600">
                 {errors.category.message}
@@ -172,37 +174,22 @@ export default function NewListing() {
             </p>
           )}
 
-          <div>
-            <label
-              htmlFor="images"
-              className="mb-2 block text-sm font-medium text-slate-700"
-            >
-              Images (up to 4)
-            </label>
-            <input
-              id="images"
-              type="file"
-              multiple
-              accept="image/*"
-              className="block w-full text-sm text-gray-600 border border-gray-300 rounded-lg cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
-              {...register("images")}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              JPG or PNG, max 5 MB each
-            </p>
-          </div>
-          {errors.images && (
-            <p id="images-error" className="mt-2 text-sm text-red-600">
-              {errors.images.message}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
-          >
+          <Controller
+            name="images"
+            control={control}
+            defaultValue={[]}
+            render={({ field, fieldState }) => (
+              <ListingImagePicker
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isPending}
+                error={fieldState.error}
+              />
+            )}
+          />
+          <Button className="w-full" type="submit" disabled={isPending}>
             {isPending ? "Creating..." : "Create Listing"}
-          </button>
+          </Button>
         </form>
       </section>
     </main>

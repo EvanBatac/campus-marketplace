@@ -1,3 +1,4 @@
+import LoadingSkeleton from "../components/ui/LoadingSkeleton";
 import { useEffect, useRef, useState } from "react";
 import { socket } from "../socket";
 import { useParams } from "react-router-dom";
@@ -59,12 +60,7 @@ export default function Chat() {
   if (isLoading)
     return (
       <div className="h-full min-h-0 p-4 sm:p-6">
-        <p
-          role="status"
-          className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-xl shadow-slate-200/50"
-        >
-          Loading...
-        </p>
+        <LoadingSkeleton variant="conversations" count={3} label="Loading messages" />
       </div>
     );
   if (isError)

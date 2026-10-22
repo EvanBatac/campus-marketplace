@@ -1,3 +1,5 @@
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 import { useToast } from "../hooks/useToast";
 
 /* eslint-disable react-refresh/only-export-components */
@@ -136,7 +138,7 @@ export default function Register() {
               >
                 {field.label}
               </label>
-              <input
+              <Input
                 id={field.name}
                 type={field.type}
                 autoComplete={field.autoComplete}
@@ -149,7 +151,6 @@ export default function Register() {
                       ? "password-hint"
                       : undefined
                 }
-                className={`w-full rounded-lg border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 ${errors[field.name] ? "border-red-400" : "border-slate-300"}`}
                 {...register(field.name)}
               />
               {field.name === "password" && !errors.password && (
@@ -173,13 +174,9 @@ export default function Register() {
               {errors.root.message}
             </p>
           )}
-          <button
-            disabled={isSubmitting}
-            type="submit"
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button className="w-full" disabled={isSubmitting} type="submit">
             {isSubmitting ? "Creating account…" : "Register"}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-8 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">
