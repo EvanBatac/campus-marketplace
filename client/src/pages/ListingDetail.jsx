@@ -1,8 +1,10 @@
+import { useToast } from "../hooks/useToast";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "../api/client";
 export default function ListingDetail() {
+  const toast = useToast();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -26,6 +28,9 @@ export default function ListingDetail() {
         body: { listing_id: listingId },
       });
       return res;
+    },
+    onError: (error) => {
+      toast.error(error.message || "Something went wrong. Please try again.");
     },
     onSuccess: (res) => {
       navigate(`/messages/${res.data.id}`);

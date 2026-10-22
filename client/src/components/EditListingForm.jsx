@@ -1,3 +1,4 @@
+import { useToast } from "../hooks/useToast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { listingSchema } from "../schemas/listingSchema";
@@ -6,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 
 export default function EditListingForm({ listing }) {
+  const toast = useToast();
   const {
     register,
     handleSubmit,
@@ -34,7 +36,11 @@ export default function EditListingForm({ listing }) {
       });
       return res;
     },
+    onError: (error) => {
+      toast.error(error.message || "Something went wrong. Please try again.");
+    },
     onSuccess: () => {
+      toast.success("Listing updated successfully.");
       queryClient.invalidateQueries({ queryKey: ["listings"] });
       queryClient.invalidateQueries({
         queryKey: ["listing", String(listing.id)],

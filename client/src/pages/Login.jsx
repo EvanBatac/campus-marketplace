@@ -1,3 +1,4 @@
+import { useToast } from "../hooks/useToast";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +11,7 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 export default function Login() {
+  const toast = useToast();
   const navigate = useNavigate();
   const { login } = useAuth();
   const {
@@ -26,9 +28,11 @@ export default function Login() {
         body: data,
       });
       login(res.token);
+      toast.success("Welcome back! You’re logged in.");
       navigate("/listings");
     } catch (err) {
       setError("root", { message: err.message });
+      toast.error(err.message || "Something went wrong. Please try again.");
     }
   }
   return (

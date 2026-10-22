@@ -1,3 +1,4 @@
+import { useToast } from "../hooks/useToast";
 
 /* eslint-disable react-refresh/only-export-components */
 import { api } from "../api/client";
@@ -28,6 +29,7 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 export default function Register() {
+  const toast = useToast();
   const navigate = useNavigate();
   const {
     register,
@@ -44,9 +46,11 @@ export default function Register() {
         method: "POST",
         body: payload,
       });
+      toast.success("Account created! Log in to get started.");
       navigate("/login");
     } catch (err) {
       setError("root", { message: err.message });
+      toast.error(err.message || "Something went wrong. Please try again.");
     }
   }
   const fields = [

@@ -1,3 +1,4 @@
+import { useToast } from "../hooks/useToast";
 import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useUnread } from "../context/UnreadContext";
@@ -17,6 +18,7 @@ const privateLinks = [
 ];
 
 export default function Navbar() {
+  const toast = useToast();
   const { totalUnread } = useUnread();
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function Navbar() {
 
   function handleLogout() {
     logout();
+    toast.success("You’ve been logged out.");
     navigate("/login");
   }
   return (
