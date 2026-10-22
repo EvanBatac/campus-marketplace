@@ -15,13 +15,13 @@ createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <PresenceProvider>
-            <UnreadProvider>
-              <ToastProvider>
+          <ToastProvider>
+            <PresenceProvider>
+              <UnreadProvider>
                 <App />
-              </ToastProvider>
-            </UnreadProvider>
-          </PresenceProvider>
+              </UnreadProvider>
+            </PresenceProvider>
+          </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
