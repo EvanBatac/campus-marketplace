@@ -20,7 +20,11 @@ export async function api(path, { method = "GET", body } = {}) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message || data.error || "Something went wrong");
+    const error = new Error(
+      data.message || data.error || "Something went wrong",
+    );
+    error.status = res.status;
+    throw error;
   }
   return data;
 }

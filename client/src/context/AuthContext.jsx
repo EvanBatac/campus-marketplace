@@ -22,10 +22,12 @@ export function AuthProvider({ children }) {
       try {
         const data = await api("/api/auth/me");
         setUser(data.user);
-      } catch {
-        localStorage.removeItem("token");
-        setToken(null);
-        setUser(null);
+      } catch (error) {
+        if (error.status === 401) {
+          localStorage.removeItem("token");
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         setIsLoading(false);
       }
