@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client.js";
 import { socket } from "../socket.js";
@@ -10,9 +10,17 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const sessionVersion = useRef(0);
 
   useEffect(() => {
+    const version = sessionVersion.current;
+    let active = true;
+    const isCurrentSession = () =>
+      active && version === sessionVersion.current;
+
     async function loadUser() {
+      setAuthError(null);
       if (!token) {
         setIsLoading(false);
         setUser(null);
@@ -21,20 +29,27 @@ export function AuthProvider({ children }) {
       setIsLoading(true);
       try {
         const data = await api("/api/auth/me");
+        if (!isCurrentSession()) return;
         setUser(data.user);
       } catch (error) {
+        if (!isCurrentSession()) return;
         if (error.status === 401) {
           localStorage.removeItem("token");
           setToken(null);
           setUser(null);
+        } else {
+          setAuthError(error.message);
         }
       } finally {
-        setIsLoading(false);
+        if (isCurrentSession()) setIsLoading(false);
       }
     }
     loadUser();
+    return () => {
+      active = false;
+    };
   }, [token]);
-  
+
   useEffect(() => {
     if (!user) return;
 
@@ -47,17 +62,36 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   function login(newToken) {
+    sessionVersion.current += 1;
+    setUser(null);
+    setAuthError(null);
+    setIsLoading(true);
     localStorage.setItem("token", newToken);
     setToken(newToken);
     queryClient.clear();
   }
   function logout() {
+    sessionVersion.current += 1;
+    setUser(null);
+    setAuthError(null);
+    setIsLoading(false);
+    socket.disconnect();
     queryClient.clear();
     localStorage.removeItem("token");
     setToken(null);
   }
   return (
-    <AuthContext.Provider value={{ token, user, isLoading, login, logout, updateUser: setUser }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        isLoading,
+        authError,
+        login,
+        logout,
+        updateUser: setUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
