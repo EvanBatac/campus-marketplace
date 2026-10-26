@@ -23,12 +23,26 @@ function mergeMessages(...groups) {
 
 export default function Chat() {
   const { conversationId } = useParams();
+  return <ChatSession key={conversationId} />;
+}
+
+function ChatSession() {
+  const { conversationId } = useParams();
   const { user } = useAuth();
   const { isOnline } = usePresence();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const sending = useRef(false);
+  const active = useRef(false);
   const bottomRef = useRef(null);
   const incomingMessages = useRef(new Map());
+
+  useEffect(() => {
+    active.current = true;
+    return () => { active.current = false; };
+  }, []);
 
   const { data: conversationsData } = useQuery({
     queryKey: ["conversations", user?.id],
@@ -112,12 +126,38 @@ export default function Chat() {
 
   function handleSend(e) {
     e.preventDefault();
-    if (!text.trim()) return;
-    socket.emit("send_message", {
+    if (!text.trim() || sending.current) return;
+    if (!socket.connected) {
+      setSendError("You’re disconnected. Your draft is saved here. Reconnect and try again.");
+      return;
+    }
+    sending.current = true;
+    setIsSending(true);
+    setSendError("");
+    socket.timeout(10000).emit("send_message", {
       conversationId: Number(conversationId),
       content: text.trim(),
+    }, (error, response) => {
+      if (!active.current) return;
+      sending.current = false;
+      setIsSending(false);
+      if (error || !response?.success) {
+        setSendError(error
+          ? "Delivery wasn’t confirmed. Check the conversation before retrying; your message may have arrived."
+          : response?.message || "Unable to send message. Please try again.");
+        return;
+      }
+      const message = response.message;
+      const key = JSON.stringify([user.id, conversationId]);
+      incomingMessages.current.set(key,
+        mergeMessages(incomingMessages.current.get(key) ?? [], [message]));
+      queryClient.setQueryData(["messages", user.id, conversationId], (old) => ({
+        ...old,
+        data: mergeMessages(old?.data ?? [], [message]),
+      }));
+      queryClient.invalidateQueries({ queryKey: ["conversations", user.id] });
+      setText("");
     });
-    setText("");
   }
 
   return (
@@ -166,6 +206,7 @@ export default function Chat() {
             </ul>
             <div ref={bottomRef}></div>
           </div>
+          {sendError && <p role="alert" className="px-4 pt-3 text-sm text-red-600 sm:px-6">{sendError}</p>}
           <form
             onSubmit={handleSend}
             className="flex shrink-0 items-center gap-3 border-t border-slate-100 bg-white p-4 sm:p-6"
@@ -173,6 +214,7 @@ export default function Chat() {
             <input
               type="text"
               value={text}
+              disabled={isSending}
               placeholder="Type your message"
               aria-label="Message"
               className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
@@ -180,9 +222,10 @@ export default function Chat() {
             />
             <button
               type="submit"
+              disabled={isSending || !text.trim()}
               className="shrink-0 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
             >
-              Send
+              {isSending ? "Sending..." : sendError ? "Retry" : "Send"}
             </button>
           </form>
         </div>

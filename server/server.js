@@ -51,9 +51,13 @@ io.on("connection", (socket) => {
   }
   console.log("Online users:", [...onlineUsers.keys()]);
 
-  socket.on("send_message", async (data) => {
+  socket.on("send_message", async (data, acknowledge) => {
+    const reply = (response) => {
+      if (typeof acknowledge === "function") acknowledge(response);
+    };
     if (typeof data !== "object" || data === null) {
       console.log("Invalid message");
+      reply({ success: false, message: "Invalid message" });
       return;
     }
 
@@ -61,11 +65,13 @@ io.on("connection", (socket) => {
 
     if (!Number.isInteger(conversationId)) {
       console.log("Invalid message");
+      reply({ success: false, message: "Invalid conversation" });
       return;
     }
 
     if (typeof content !== "string" || content.trim() === "") {
       console.log("Invalid message");
+      reply({ success: false, message: "Message cannot be empty" });
       return;
     }
     try {
@@ -76,6 +82,7 @@ io.on("connection", (socket) => {
 
       if (rows.length === 0) {
         console.log("Not allowed");
+        reply({ success: false, message: "Conversation unavailable or access denied" });
         return;
       }
       const conversation = rows[0];
@@ -99,6 +106,7 @@ io.on("connection", (socket) => {
       io.to(`user:${recipientId}`)
         .to(`user:${socket.user.id}`)
         .emit("new_message", message);
+      reply({ success: true, message });
 
       console.log(
         "Saved message",
@@ -110,6 +118,7 @@ io.on("connection", (socket) => {
       );
     } catch (err) {
       console.error("send_message error:", err.message);
+      reply({ success: false, message: "Unable to send message. Please try again." });
     }
   });
   socket.on("disconnect", (reason) => {
