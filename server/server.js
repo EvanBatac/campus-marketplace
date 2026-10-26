@@ -16,10 +16,14 @@ app.use(cors());
 app.use(express.json());
 
 const httpServer = http.createServer(app);
+const clientOrigins = (process.env.CLIENT_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: clientOrigins,
   },
 });
 io.use((socket, next) => {
