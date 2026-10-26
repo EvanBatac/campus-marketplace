@@ -22,7 +22,10 @@ export const registerSchema = z
     password: z
       .string()
       .min(1, "Password is required")
-      .min(8, "Password must be at least 8 characters"),
+      .min(8, "Password must be at least 8 characters")
+      .refine((value) => new TextEncoder().encode(value).length <= 72, {
+        message: "Password must be 72 UTF-8 bytes or fewer",
+      }),
 
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })

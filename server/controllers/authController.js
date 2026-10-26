@@ -43,6 +43,12 @@ export const register = async (req, res) => {
         message: "Password too short",
       });
     }
+    if (Buffer.byteLength(password, "utf8") > 72) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be 72 UTF-8 bytes or fewer",
+      });
+    }
 
     const [rows] = await pool.query("SELECT id FROM users WHERE email = ?", [
       normalizedEmail,
@@ -146,9 +152,10 @@ export const login = async (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT id, name, email FROM users WHERE id = ?", [
-      req.user.id,
-    ]);
+    const [rows] = await pool.query(
+      "SELECT id, name, email FROM users WHERE id = ?",
+      [req.user.id],
+    );
     if (rows.length === 0) {
       return res.status(404).json({
         success: false,
