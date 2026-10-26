@@ -11,10 +11,13 @@ export const listingSchema = z.object({
     .trim()
     .max(1000, "Description is too long (max 1000 characters)")
     .optional(),
-  price: z.coerce
-    .number()
-    .nonnegative("Price cannot be negative")
-    .max(99999999.99, "Price is too high"),
+  price: z.preprocess(
+    (val) => (val === "" || val == null ? undefined : Number(val)),
+    z
+      .number({ error: "Price is required" })
+      .nonnegative("Price cannot be negative")
+      .max(99999999.99, "Price is too high"),
+  ),
   category: z.enum(["books", "electronics", "furniture", "clothing", "other"], {
     error: "Please select a category",
   }),
