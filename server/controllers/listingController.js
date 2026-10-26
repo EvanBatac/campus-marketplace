@@ -2,6 +2,10 @@ import pool from "../config/db.js";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
 import { deleteFromCloudinary } from "../utils/deleteFromCloudinary.js";
 export const createListing = async (req, res) => {
+  let connection;
+  let transactionStarted = false;
+  let committed = false;
+  const uploaded = [];
   try {
     const seller_id = req.user.id;
     const { title, description, category, image_url } = req.body ?? {};
@@ -60,12 +64,20 @@ export const createListing = async (req, res) => {
       });
     }
 
-    const uploaded = await Promise.all(
+    const uploads = await Promise.allSettled(
       (req.files ?? []).map((file) => uploadToCloudinary(file.buffer)),
     );
+    for (const result of uploads) {
+      if (result.status === "fulfilled") uploaded.push(result.value);
+    }
+    const failedUpload = uploads.find((result) => result.status === "rejected");
+    if (failedUpload) throw failedUpload.reason;
     const coverUrl = uploaded[0]?.url ?? null;
 
-    const [result] = await pool.query(
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    transactionStarted = true;
+    const [result] = await connection.query(
       "INSERT INTO listings (seller_id, title, description, price, category, image_url) VALUES (?, ?, ?, ?, ?, ?)",
       [
         seller_id,
@@ -86,27 +98,52 @@ export const createListing = async (req, res) => {
         index,
       ]);
 
-      await pool.query(
+      await connection.query(
         "INSERT INTO listing_images (listing_id, url, public_id, position) VALUES ?",
         [imageRows],
       );
     }
 
-    const [rows] = await pool.query(
+    const [rows] = await connection.query(
       "SELECT * FROM listings WHERE id = ? AND seller_id = ?",
       [listingId, seller_id],
     );
+    await connection.commit();
+    committed = true;
     res.status(201).json({
       success: true,
       message: "Listing successfully created",
       data: rows[0],
     });
   } catch (error) {
+    if (transactionStarted && !committed) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error("Failed to roll back listing creation:", rollbackError);
+      }
+    }
+    if (!committed) {
+      const cleanup = await Promise.allSettled(
+        uploaded.map(({ public_id }) => deleteFromCloudinary(public_id)),
+      );
+      cleanup.forEach((result, index) => {
+        if (result.status === "rejected") {
+          console.error(
+            "Failed to clean up listing image:",
+            uploaded[index].public_id,
+            result.reason,
+          );
+        }
+      });
+    }
     console.error(error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
     });
+  } finally {
+    connection?.release();
   }
 };
 
