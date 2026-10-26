@@ -13,7 +13,7 @@ export const listingSchema = z.object({
     .optional(),
   price: z.coerce
     .number()
-    .positive("Price must be greater than 0")
+    .nonnegative("Price cannot be negative")
     .max(99999999.99, "Price is too high"),
   category: z.enum(["books", "electronics", "furniture", "clothing", "other"], {
     error: "Please select a category",
