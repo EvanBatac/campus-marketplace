@@ -7,6 +7,20 @@ import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { usePresence } from "../context/PresenceContext";
 
+const EMPTY_MESSAGES = [];
+
+function mergeMessages(...groups) {
+  const byId = new Map();
+  for (const message of groups.flat()) {
+    byId.set(String(message.id), message);
+  }
+  return [...byId.values()].sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime() ||
+      Number(a.id) - Number(b.id),
+  );
+}
+
 export default function Chat() {
   const { conversationId } = useParams();
   const { user } = useAuth();
@@ -14,6 +28,7 @@ export default function Chat() {
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const bottomRef = useRef(null);
+  const incomingMessages = useRef(new Map());
 
   const { data: conversationsData } = useQuery({
     queryKey: ["conversations", user?.id],
@@ -33,18 +48,34 @@ export default function Chat() {
     queryKey: ["messages", user?.id, conversationId],
     enabled: Boolean(user),
     queryFn: async () => {
+      const key = JSON.stringify([user.id, conversationId]);
       const res = await api(`/api/conversations/${conversationId}/messages`);
-      return res;
+      return {
+        ...res,
+        data: mergeMessages(
+          incomingMessages.current.get(key) ?? [],
+          res.data,
+        ),
+      };
     },
   });
-  const messages = data?.data;
+  const messages = data?.data ?? EMPTY_MESSAGES;
   useEffect(() => {
+    if (!user) return;
+    const key = JSON.stringify([user.id, conversationId]);
     function onNewMessage(message) {
-      if (message.conversation_id !== Number(conversationId)) return;
-      queryClient.setQueryData(["messages", user?.id, conversationId], (old) => ({
-        ...old,
-        data: [...old.data, message],
-      }));
+      if (Number(message.conversation_id) !== Number(conversationId)) return;
+      incomingMessages.current.set(
+        key,
+        mergeMessages(incomingMessages.current.get(key) ?? [], [message]),
+      );
+      queryClient.setQueryData(
+        ["messages", user?.id, conversationId],
+        (old) => {
+          if (!old) return old;
+          return { ...old, data: mergeMessages(old.data ?? [], [message]) };
+        },
+      );
     }
 
     socket.on("new_message", onNewMessage);
@@ -52,7 +83,7 @@ export default function Chat() {
     return () => {
       socket.off("new_message", onNewMessage);
     };
-  }, [conversationId, queryClient, user?.id]);
+  }, [conversationId, queryClient, user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -60,7 +91,11 @@ export default function Chat() {
   if (isLoading)
     return (
       <div className="h-full min-h-0 p-4 sm:p-6">
-        <LoadingSkeleton variant="conversations" count={3} label="Loading messages" />
+        <LoadingSkeleton
+          variant="conversations"
+          count={3}
+          label="Loading messages"
+        />
       </div>
     );
   if (isError)
@@ -87,13 +122,22 @@ export default function Chat() {
 
   return (
     <div className="h-full min-h-0">
-      <section aria-labelledby="chat-heading" className="flex h-full min-h-0 flex-col">
+      <section
+        aria-labelledby="chat-heading"
+        className="flex h-full min-h-0 flex-col"
+      >
         <header className="shrink-0 border-b border-slate-100 px-4 py-5 sm:px-6">
-          <h1 id="chat-heading" className="wrap-anywhere text-xl font-bold tracking-tight text-slate-900">
+          <h1
+            id="chat-heading"
+            className="wrap-anywhere text-xl font-bold tracking-tight text-slate-900"
+          >
             {conversation?.other_user_name ?? "Chat"}
           </h1>
           <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-            <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${online ? "bg-green-500" : "bg-slate-300"}`} />
+            <span
+              aria-hidden="true"
+              className={`h-2 w-2 shrink-0 rounded-full ${online ? "bg-green-500" : "bg-slate-300"}`}
+            />
             {online ? "Online" : "Offline"}
           </p>
         </header>
